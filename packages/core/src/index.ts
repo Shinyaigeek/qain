@@ -33,6 +33,7 @@ export {
   NON_RENDERED_TAGS,
 } from './projection.js'
 export { formatHtml, formatText } from './report.js'
+export { renderReplay, renderReplayDiff, type ReplayOptions } from './replay.js'
 export {
   captureRules,
   type CaptureRulesOptions,
@@ -59,4 +60,5 @@ export {
   type QainNode,
   type Snapshot,
   type StateName,
+  type TextRun,
 } from './types.js'

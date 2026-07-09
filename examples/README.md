@@ -59,6 +59,13 @@ Note the footnote. Its colour changed *and* it was displaced by the buttons
 growing — but colour cannot move a box, so only the colour is reported as a
 cause. That distinction lives in `GEOMETRIC_PROPERTIES`.
 
+## Look at it
+
+Step 8 of the demo writes `examples/replay.html`: both pages rebuilt from their
+snapshots, side by side, with an opacity slider. Switch to overlay, drag the fader,
+and watch the footnote slide 12px as the buttons grow. Causes are outlined in red,
+collateral in grey.
+
 ## Is this a test?
 
 Yes. `scripts/demo.mjs` shells out to the real `qain` binary rather than importing
@@ -68,4 +75,4 @@ asserts that all six regressed elements are found and that the rehashed class is
 not, then fails loudly if the example ever stops demonstrating what it claims to.
 
 `tests/billing.spec.ts` does the same through `toMatchStyleSnapshot`, including
-the HTML report it attaches to the Playwright run on failure.
+the HTML report and the replay it attaches to the Playwright run on failure.

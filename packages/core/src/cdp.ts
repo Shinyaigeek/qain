@@ -70,6 +70,15 @@ export interface LayoutTreeSnapshot {
   textColorOpacities?: number[]
 }
 
+export interface TextBoxSnapshot {
+  /** Index into LayoutTreeSnapshot arrays — the text node this run belongs to. */
+  layoutIndex: number[]
+  bounds: number[][]
+  /** Offset and length into that layout object's text. One entry per rendered line. */
+  start: number[]
+  length: number[]
+}
+
 export interface DocumentSnapshot {
   documentURL: number
   title: number
@@ -78,6 +87,7 @@ export interface DocumentSnapshot {
   encodingName: number
   nodes: NodeTreeSnapshot
   layout: LayoutTreeSnapshot
+  textBoxes: TextBoxSnapshot
   scrollOffsetX: number
   scrollOffsetY: number
   contentWidth?: number

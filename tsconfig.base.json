@@ -3,7 +3,8 @@
     "target": "ES2023",
     "lib": [
       "ES2023",
-      "DOM"
+      "DOM",
+      "DOM.Iterable"
     ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

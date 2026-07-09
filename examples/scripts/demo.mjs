@@ -6,9 +6,10 @@
  * codes, which is how an agent or a CI job decides whether anything broke.
  */
 import { spawn } from 'node:child_process'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { start } from '../app/server.mjs'
 
 const PORT = 5601
@@ -38,7 +39,7 @@ const after = join(dir, 'after.json')
 
 try {
   heading('1. Snapshot the page as it is today')
-  const snapArgs = ['--rules', '--states', 'hover', ...browser]
+  const snapArgs = ['--rules', '--replay', '--states', 'hover', ...browser]
   const a = await qain(['snap', BASE, ...snapArgs, '-o', before])
   process.stdout.write(a.stderr || a.stdout)
   if (a.code !== 0) throw new Error(`qain snap failed: ${a.stderr}`)
@@ -90,6 +91,19 @@ try {
   const churn = result.changes.filter((c) => c.kind === 'attr' && c.attribute === 'class')
   process.stdout.write(`  class attribute changes reported: ${churn.length}\n`)
   if (churn.length !== 0) throw new Error('class churn must not appear in a diff')
+
+  heading('8. Rebuild both pages so a human can look at them')
+  const replay = join(dirname(fileURLToPath(new URL('.', import.meta.url))), 'replay.html')
+  const built = await qain(['diff', before, after, '--replay', replay, '--no-color'])
+  if (built.code !== 1) throw new Error('replay run should still report the diff')
+
+  const html = await readFile(replay, 'utf8')
+  const stages = html.match(/class="stage"/g)?.length ?? 0
+  if (stages !== 2) throw new Error(`expected a before and an after stage, got ${stages}`)
+  process.stdout.write(
+    `  ${replay}\n` +
+      '  Open it: fade between before and after to watch the footnote slide 12px.\n',
+  )
 
   process.stdout.write('\n\x1b[32mExample verified.\x1b[0m\n')
 } finally {

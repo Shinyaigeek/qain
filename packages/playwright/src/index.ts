@@ -10,6 +10,7 @@ import {
   diff,
   formatHtml,
   formatText,
+  renderReplayDiff,
 } from '@qain/core'
 
 export type { CaptureOptions, DiffOptions, Snapshot }
@@ -110,6 +111,16 @@ export const expect = baseExpect.extend({
       contentType: 'application/json',
     })
 
+    // Captured with `replay: true`, both snapshots can be rebuilt into pages a
+    // human can fade between. This is the closest qain gets to a screenshot, and
+    // it needs no viewer beyond the Playwright report.
+    if (hasTextRuns(baseline) && hasTextRuns(actual)) {
+      await info.attach(`${name}-replay.html`, {
+        body: renderReplayDiff(baseline, actual, result),
+        contentType: 'text/html',
+      })
+    }
+
     const text = formatText(result, { color: false })
     const hint = 'Open the attached diff report, or re-run with --update-snapshots to accept.'
     return {
@@ -119,6 +130,11 @@ export const expect = baseExpect.extend({
     }
   },
 })
+
+/** Replay needs the per-line text rectangles that `capture({ replay: true })` records. */
+function hasTextRuns(snapshot: Snapshot): boolean {
+  return snapshot.states.some((state) => state.nodes.some((node) => node.textRuns !== undefined))
+}
 
 async function readBaseline(path: string): Promise<Snapshot | null> {
   try {

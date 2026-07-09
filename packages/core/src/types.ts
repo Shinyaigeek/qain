@@ -24,6 +24,19 @@ export type StateName = 'default' | PseudoState
 /** [x, y, width, height] in document coordinates, CSS pixels. */
 export type Box = [number, number, number, number]
 
+/**
+ * One rendered line of text, at the rectangle the browser put it in.
+ *
+ * This is what makes replay possible without recording `padding`. A button's text
+ * run sits at the border box plus its border and padding — the offset *is* the
+ * padding, already resolved. Recorded only with `capture({ replay: true })`, and
+ * never compared: a text run is a consequence of the box, not a fact about it.
+ */
+export interface TextRun {
+  box: Box
+  text: string
+}
+
 export interface QainNode {
   /**
    * Identity across snapshots. Stable under sibling insertion, unlike a CSS path.
@@ -50,6 +63,8 @@ export interface QainNode {
   /** Composited background color — what the pixels actually are. Text-bearing nodes only. */
   blendedBackground?: string
   textOpacity?: number
+  /** Per-line text rectangles, for replay. Present only with `capture({ replay: true })`. */
+  textRuns?: TextRun[]
 }
 
 export interface CapturedState {

@@ -7,3 +7,5 @@ playwright-report/
 
 # Baselines written by tests that use an explicit --path
 *.spec.ts-snapshots/
+
+examples/replay.html

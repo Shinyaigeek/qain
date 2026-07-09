@@ -2,6 +2,7 @@ import {
   type AxNode,
   type CaptureSnapshotResult,
   type CdpSession,
+  type DocumentSnapshot,
   type StyleSheetHeader,
   rare,
   rareBool,
@@ -22,6 +23,7 @@ import {
   type PseudoState,
   type QainNode,
   type Snapshot,
+  type TextRun,
 } from './types.js'
 
 export interface CaptureOptions {
@@ -47,6 +49,11 @@ export interface CaptureOptions {
   rules?: boolean
   /** Include the user-agent stylesheet in `rules`. Large, and nobody edited it. */
   includeUserAgentRules?: boolean
+  /**
+   * Also record each rendered line of text at the rectangle the browser gave it,
+   * which is what `qain view` needs to rebuild the page without re-running layout.
+   */
+  replay?: boolean
 }
 
 interface Parsed {
@@ -119,13 +126,14 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
     throw new Error(`qain: no element matched selector ${JSON.stringify(options.selector)}`)
   }
 
-  const defaultParsed = parse(
-    await takeSnapshot(),
+  const parseOptions = {
     projection,
-    axByBackendId,
+    ax: axByBackendId,
     excluded,
     scopeBackendId,
-  )
+    replay: !!options.replay,
+  }
+  const defaultParsed = parse(await takeSnapshot(), parseOptions)
 
   const captured: CapturedState[] = [{ state: 'default', nodes: defaultParsed.nodes }]
 
@@ -146,7 +154,7 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
     for (const state of states) {
       const result = await captureState(cdp, state, candidates, {
         takeSnapshot,
-        parse: (snap) => parse(snap, projection, axByBackendId, excluded, scopeBackendId),
+        parse: (snap) => parse(snap, parseOptions),
         defaultParsed,
         strategy: options.strategy ?? 'auto',
       })
@@ -411,18 +419,22 @@ async function findCandidates(
 // Snapshot parsing
 // ---------------------------------------------------------------------------
 
-function parse(
-  snapshot: CaptureSnapshotResult,
-  projection: string[],
-  ax: Map<number, { role?: string; name?: string }>,
-  excludedAttributes: Set<string>,
-  scopeBackendId: number | undefined,
-): Parsed {
+interface ParseOptions {
+  projection: string[]
+  ax: Map<number, { role?: string; name?: string }>
+  excluded: Set<string>
+  scopeBackendId: number | undefined
+  replay: boolean
+}
+
+function parse(snapshot: CaptureSnapshotResult, options: ParseOptions): Parsed {
+  const { projection, ax, excluded: excludedAttributes, scopeBackendId } = options
   const strings = snapshot.strings
   const document = snapshot.documents[0]
   if (!document) throw new Error('qain: DOMSnapshot returned no documents')
 
   const { nodes, layout } = document
+  const runsByLayout = options.replay ? indexTextRuns(document, strings) : undefined
   const layoutByNode = new Map<number, number>()
   for (let li = 0; li < layout.nodeIndex.length; li++) {
     layoutByNode.set(layout.nodeIndex[li]!, li)
@@ -448,6 +460,22 @@ function parse(
       if (name && !excludedAttributes.has(name)) out[name] = value
     }
     return out
+  }
+
+  /**
+   * A text node's runs belong to the element that contains it. Pseudo-elements own
+   * their own layout object, and therefore their own runs.
+   */
+  const textRunsFor = (ni: number, ownLayout: number | undefined): TextRun[] | undefined => {
+    if (!runsByLayout) return undefined
+    const runs: TextRun[] = []
+    if (ownLayout !== undefined) runs.push(...(runsByLayout.get(ownLayout) ?? []))
+    for (let i = 0; i < nodes.parentIndex.length; i++) {
+      if (nodes.parentIndex[i] !== ni || nodes.nodeType[i] !== TEXT_NODE) continue
+      const li = layoutByNode.get(i)
+      if (li !== undefined) runs.push(...(runsByLayout.get(li) ?? []))
+    }
+    return runs.length > 0 ? runs : undefined
   }
 
   const directText = (ni: number): string | undefined => {
@@ -548,6 +576,8 @@ function parse(
 
     const text = pseudoText ?? directText(ni)
     if (text) node.text = text
+    const runs = textRunsFor(ni, li)
+    if (runs) node.textRuns = runs
     if (li !== undefined) {
       const paintOrder = layout.paintOrders?.[li]
       if (paintOrder !== undefined) node.paintOrder = paintOrder
@@ -571,6 +601,38 @@ function parse(
     title: strings[document.title] ?? '',
     url: strings[document.documentURL] ?? '',
   }
+}
+
+/**
+ * Groups `textBoxes` by the layout object they belong to, slicing each run's text
+ * out of that object's full string. One entry per rendered line, so wrapped text
+ * replays with the same line breaks the browser chose.
+ */
+function indexTextRuns(document: DocumentSnapshot, strings: string[]): Map<number, TextRun[]> {
+  const byLayout = new Map<number, TextRun[]>()
+  const boxes = document.textBoxes
+  if (!boxes) return byLayout
+
+  for (let i = 0; i < boxes.layoutIndex.length; i++) {
+    const li = boxes.layoutIndex[i]!
+    const bounds = boxes.bounds[i]
+    if (!bounds || bounds.length !== 4) continue
+    // A zero-area run is collapsed whitespace between tags. It renders nothing.
+    if (bounds[2] === 0 || bounds[3] === 0) continue
+
+    const full = str(strings, document.layout.text[li])
+    if (full === undefined) continue
+    const text = full.substr(boxes.start[i]!, boxes.length[i]!)
+    if (text.length === 0) continue
+
+    const list = byLayout.get(li) ?? []
+    list.push({
+      box: [round(bounds[0]!), round(bounds[1]!), round(bounds[2]!), round(bounds[3]!)],
+      text,
+    })
+    byLayout.set(li, list)
+  }
+  return byLayout
 }
 
 /** Chromium reports sub-pixel bounds; three decimals is well past what anyone can see. */

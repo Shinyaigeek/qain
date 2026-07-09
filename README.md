@@ -35,10 +35,11 @@ pnpm add -D @qain/core        # library
 ## CLI — for humans and coding agents
 
 ```sh
-qain snap http://localhost:3000 --rules -o before.json
+qain snap http://localhost:3000 --rules --replay -o before.json
 # ... change the code ...
-qain snap http://localhost:3000 --rules -o after.json
+qain snap http://localhost:3000 --rules --replay -o after.json
 qain diff before.json after.json --omit-derived
+qain diff before.json after.json --replay report.html   # and look at it
 ```
 
 Exit code is 1 when the diff is non-empty, so an agent can gate on it. `--json`
@@ -130,6 +131,40 @@ their cause is another node.
 
 Cost: one CDP round-trip per node, and roughly 3× the snapshot size. Hence opt-in.
 
+## Replay
+
+`qain view` rebuilds the page from the snapshot. Not a screenshot — a
+reconstruction, and it is exact:
+
+```sh
+qain snap http://localhost:3000 --replay -o page.json
+qain view page.json -o page.html
+```
+
+The trick is that **replay never re-runs layout.** Every element is placed at the
+rectangle Chromium gave it, and every *line* of text at the rectangle Chromium
+gave that line (`--replay` records those; `DOMSnapshot` returns them alongside the
+boxes). Nothing cascades, nothing reflows, nothing depends on the viewport, so
+nothing can come out subtly different from what was recorded.
+
+This is also how the projection gets away with omitting `padding`. A button's text
+run sits eighteen pixels inside its border box; that offset **is** the padding,
+already resolved. Margins, flex distribution, text alignment and the line breaks
+in a wrapped paragraph all arrive the same way.
+
+The e2e suite asserts that the rebuilt page is **pixel-identical** to the original.
+
+`qain diff a.json b.json --replay out.html` writes both reconstructions into one
+page, side by side or stacked with an opacity slider. A four-pixel shift is
+invisible in two images next to each other and obvious when you fade one into the
+other. Causes are outlined in red, collateral in grey, and the cause list scrolls
+you to whichever one you click. The Playwright matcher attaches this to the run's
+report on failure.
+
+Not reproduced: rotations and skews (`bounds` is post-transform but axis-aligned,
+so a rotated element replays as its bounding box), and anything outside the
+projection — gradients, backdrop filters, clip paths.
+
 ## Contrast
 
 Because Chromium reports the *composited* background (`blendedBackgroundColors`),
@@ -139,8 +174,7 @@ A ratio that crosses a WCAG threshold is reported by name.
 
 ## What it does not do
 
-- **Replay.** Snapshots are data, not a reconstructed page. The Playwright HTML
-  report is the viewer.
+- **Replay rotations.** See above: a rotated element comes back as its bounding box.
 - **Attribute pseudo-states.** `rules` are captured for the default state only.
 - **Attribute across nodes.** A rule that stopped matching because a class changed
   shows up as a declaration appearing or disappearing, not as "you removed

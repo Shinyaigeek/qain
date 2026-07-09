@@ -62,3 +62,27 @@ test('fails with a readable diff and attaches a report', async ({ page }, testIn
     await rm(dir, { recursive: true, force: true })
   }
 })
+
+test('attaches a replay when the snapshots were captured for it', async ({ page }, testInfo) => {
+  const dir = await mkdtemp(join(tmpdir(), 'qain-'))
+  const path = join(dir, 'baseline.qain.json')
+  try {
+    await page.goto('/base.html')
+    await page.evaluate(() => document.fonts.ready)
+    await expect(async () => {
+      await expect(page).toMatchStyleSnapshot({ path, replay: true })
+    }).rejects.toThrow(/wrote a new style baseline/)
+
+    await page.goto('/derived-shift.html')
+    await page.evaluate(() => document.fonts.ready)
+    await expect(async () => {
+      await expect(page).toMatchStyleSnapshot({ path, replay: true })
+    }).rejects.toThrow(/does not match/)
+
+    const replay = testInfo.attachments.find((a) => a.name.endsWith('-replay.html'))
+    expect(replay).toBeDefined()
+    expect(replay!.contentType).toBe('text/html')
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+})
