@@ -95,10 +95,11 @@ export function diff(before: Snapshot, after: Snapshot, options: DiffOptions = {
 
   const filtered = options.omitDerived ? changes.filter((c) => !isDerived(c)) : changes
 
-  if (filtered.length > 0 && Boolean(before.rules) !== Boolean(after.rules)) {
+  const carries = (snapshot: Snapshot) => snapshot.states.some((s) => s.rules !== undefined)
+  if (filtered.length > 0 && carries(before) !== carries(after)) {
     warnings.push('only one snapshot carries matched rules, so changes cannot be attributed')
   }
-  const attributions = explain(filtered, before.rules, after.rules)
+  const attributions = explain(filtered, before.states, after.states)
 
   return {
     qain: FORMAT_VERSION,

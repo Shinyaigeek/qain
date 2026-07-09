@@ -22,7 +22,7 @@ viewport — which is the situation a style-regression tool exists for.
 | `.btn` padding `8px 16px` → `14px 16px` | two buttons **resized**; everything below them **moved** |
 | `.muted` colour `#6b7280` → `#c7cbd4` | three nodes **recoloured**, contrast `4.83 → 1.63`, below WCAG AA |
 | `.badge` `z-index: 2` → `0` | **paint order** changed — the badge now renders under the heading |
-| `.btn-primary:hover` background = the resting background | the `:hover` state stopped differing |
+| `.btn-primary:hover` background = the resting background | the `:hover` state stopped differing, blamed on `.btn-primary:hover` |
 | every `css-a1b2c3` → `css-9f8e7d` | **nothing** |
 
 The last row is the point. A CSS-Modules or Tailwind build rewrites class strings

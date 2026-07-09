@@ -2,7 +2,7 @@ import type { Attribution } from './explain.js'
 import type { RuleIndex } from './rules.js'
 
 /** Bumped whenever the on-disk snapshot shape changes incompatibly. */
-export const FORMAT_VERSION = 1
+export const FORMAT_VERSION = 2
 
 /**
  * Pseudo-classes qain can force via CSS.forcePseudoState. `visited` is omitted:
@@ -76,6 +76,16 @@ export interface CapturedState {
    */
   strategy?: 'bulk' | 'isolated'
   nodes: QainNode[]
+  /**
+   * Matched author declarations for the nodes of *this* state. Present only when
+   * captured with `rules: true`.
+   *
+   * Rules are per-state because the cascade is: `CSS.getMatchedStylesForNode`
+   * simply does not return `.btn:hover` unless the node is currently forced into
+   * `:hover`. A hover regression can only be attributed to the rule that caused it
+   * by asking while the pseudo-class is held down.
+   */
+  rules?: RuleIndex
 }
 
 export interface Snapshot {
@@ -86,11 +96,6 @@ export interface Snapshot {
   /** The computed-style properties this snapshot recorded. Diffing is scoped to these. */
   projection: string[]
   states: CapturedState[]
-  /**
-   * Matched author declarations per node, for the default state. Present only when
-   * captured with `rules: true`. Lets a diff say which rule caused each change.
-   */
-  rules?: RuleIndex
   warnings: string[]
 }
 
@@ -110,6 +115,11 @@ interface ChangeBase {
   state: StateName
   key: string
   path: string
+}
+
+/** Where a change lives. Attribution is per-state: the cascade differs under :hover. */
+export function changeId(state: StateName, key: string): string {
+  return `${state}\u0000${key}`
 }
 
 export type Change =

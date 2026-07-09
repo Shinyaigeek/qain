@@ -1,6 +1,6 @@
 import { type Attribution, describeCause } from './explain.js'
 import { formatSource } from './rules.js'
-import { type Change, type Diff, isDerived } from './types.js'
+import { type Change, type Diff, changeId, isDerived } from './types.js'
 
 /**
  * Renders a diff for a terminal. Primary changes first — the whole reason qain
@@ -73,7 +73,7 @@ export function formatText(diff: Diff, options: { color?: boolean } = {}): strin
 }
 
 function indexAttributions(attributions: Attribution[]): Map<string, Attribution> {
-  return new Map(attributions.map((a) => [a.key, a]))
+  return new Map(attributions.map((a) => [changeId(a.state, a.key), a]))
 }
 
 /**
@@ -82,8 +82,8 @@ function indexAttributions(attributions: Attribution[]): Map<string, Attribution
  * both a resize and a shift.
  */
 function causeLines(index: Map<string, Attribution>, group: Change[]): string[] {
-  const key = group[0]?.key
-  const attribution = key ? index.get(key) : undefined
+  const first = group[0]
+  const attribution = first ? index.get(changeId(first.state, first.key)) : undefined
   if (!attribution) return []
 
   // Silence here would read as "no cause", when it means "the cause is not CSS" \u2014
@@ -150,9 +150,10 @@ export function formatHtml(diff: Diff): string {
     const explained = new Set<string>()
     return changes
       .map((change) => {
-        const shown = withCauses && !explained.has(change.key)
-        if (shown) explained.add(change.key)
-        const attribution = shown ? index.get(change.key) : undefined
+        const id = changeId(change.state, change.key)
+        const shown = withCauses && !explained.has(id)
+        if (shown) explained.add(id)
+        const attribution = shown ? index.get(id) : undefined
         const causes = !attribution
           ? ''
           : attribution.unattributed

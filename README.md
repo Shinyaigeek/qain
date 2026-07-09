@@ -86,7 +86,9 @@ something else. A container that grew only did so to fit a child. Six
 ## Pseudo-states
 
 qain forces `:hover`, `:focus-visible` and friends through CDP and snapshots the
-result — something pixel VRT cannot do without synthesising real pointer input.
+result — something pixel VRT cannot do without synthesising real pointer input. With
+`--rules`, the matched declarations are captured inside that same window, so a hover
+regression names the `:hover` rule that caused it.
 
 Forcing every button into `:hover` at once is a page state that never occurs in a
 browser. It is safe only if hovering changes nothing outside the hovered elements.
@@ -124,12 +126,29 @@ declaration it picks equals the value Chromium computed.
 `longhandProperties` so a `padding-top` change finds `padding: 8px 16px`, then
 collapsed back so one edit reads as one cause rather than four.
 
+**A pseudo-state has its own cascade.** `CSS.getMatchedStylesForNode` does not
+return `.btn:hover` for a node that is not hovered — so a hover regression can only
+be attributed by asking *while the pseudo-class is held down*. qain captures rules
+per state, inside the window where the state is forced:
+
+```
+:hover
+  button[data-testid=pay]
+    background-color: rgb(29, 78, 216) → rgb(37, 99, 235)
+    contrast 6.7 → 5.17
+    ← .btn-primary:hover { background: rgb(29, 78, 216) → rgb(37, 99, 235) }  theme.css:15:3
+```
+
+A single index keyed by node would have pointed at the resting `.btn` rule, which
+has nothing to do with the change. Attributions are keyed by `(state, node)`.
+
 When a primary change has no declaration behind it — a longer label widened the
 button — qain says `no CSS declaration on this node changed` instead of blaming a
 rule that happens to mention `width`. Derived changes are never attributed at all;
 their cause is another node.
 
 Cost: one CDP round-trip per node, and roughly 3× the snapshot size. Hence opt-in.
+A pseudo-state adds only its forced subtrees — three nodes, not the whole page.
 
 ## Replay
 
@@ -175,7 +194,8 @@ A ratio that crosses a WCAG threshold is reported by name.
 ## What it does not do
 
 - **Replay rotations.** See above: a rotated element comes back as its bounding box.
-- **Attribute pseudo-states.** `rules` are captured for the default state only.
+- **Attribute pseudo-elements.** `::before` rules arrive under the host's
+  `pseudoElements`, which qain does not yet read.
 - **Attribute across nodes.** A rule that stopped matching because a class changed
   shows up as a declaration appearing or disappearing, not as "you removed
   `.primary`".

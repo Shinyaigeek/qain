@@ -42,7 +42,7 @@ test('resolves the cascade rather than taking the last matched rule', async ({ p
   const node = before.states[0]!.nodes.find((n) => n.key === '@t')!
   expect(node.styles['background-color']).toBe('rgb(3, 3, 3)')
 
-  const declarations = before.rules!['@t']!
+  const declarations = before.states[0]!.rules!['@t']!
   const win = winner(declarations, 'background-color')
   expect(win!.value).toBe('rgb(3, 3, 3)')
   expect(win!.important).toBe(true)
@@ -123,9 +123,67 @@ test('a snapshot without rules yields no attributions and warns on mismatch', as
 
 test('rules exclude the user-agent stylesheet by default', async ({ page }) => {
   const snapshot = await snap(page, '/ext-base.html', { rules: true })
-  const declarations = snapshot.rules!['@submit']!
+  const declarations = snapshot.states[0]!.rules!['@submit']!
   expect(declarations.every((d) => d.origin !== 'user-agent')).toBe(true)
 
   const withUa = await snap(page, '/ext-base.html', { rules: true, includeUserAgentRules: true })
-  expect(withUa.rules!['@submit']!.some((d) => d.origin === 'user-agent')).toBe(true)
+  expect(withUa.states[0]!.rules!['@submit']!.some((d) => d.origin === 'user-agent')).toBe(true)
+})
+
+// ---------------------------------------------------------------------------
+// Pseudo-states have their own cascade.
+// ---------------------------------------------------------------------------
+
+test('a :hover rule is invisible until the node is forced into :hover', async ({ page }) => {
+  // The reason rules are captured per state rather than once: CSS.getMatchedStylesForNode
+  // simply does not return `.btn:hover` for a node that is not hovered.
+  const snapshot = await snap(page, '/hover-rules.html', { rules: true, states: ['hover'] })
+
+  const resting = snapshot.states.find((s) => s.state === 'default')!.rules!['@a']!
+  const hovered = snapshot.states.find((s) => s.state === 'hover')!.rules!['@a']!
+
+  expect(resting.map((d) => d.selector)).not.toContain('.btn:hover')
+  expect(hovered.map((d) => d.selector)).toContain('.btn:hover')
+
+  // And the winning declaration under :hover is the one the browser actually used.
+  const win = winner(hovered, 'background-color')
+  expect(win!.selector).toBe('.btn:hover')
+  const node = snapshot.states.find((s) => s.state === 'hover')!.nodes.find((n) => n.key === '@a')!
+  expect(node.styles['background-color']).toBe(win!.value)
+})
+
+test('a hover regression is attributed to the hover rule, not the resting one', async ({
+  page,
+}) => {
+  const before = await snap(page, '/hover-rules.html', { rules: true, states: ['hover'] })
+  const after = await snap(page, '/hover-rules-changed.html', { rules: true, states: ['hover'] })
+  const result = diff(before, after)
+
+  const hover = result.attributions.find((a) => a.state === 'hover' && a.key === '@a')
+  expect(hover).toBeDefined()
+
+  // The diff detects `background-color`; the author wrote the `background`
+  // shorthand, and that is what gets named.
+  expect(result.changes.some((c) => c.kind === 'style' && c.property === 'background-color')).toBe(
+    true,
+  )
+  const cause = hover!.causes.find((c) => c.property === 'background')!
+  expect(cause.before!.selector).toBe('.btn:hover')
+  expect(cause.after!.selector).toBe('.btn:hover')
+  expect(cause.after!.value).toBe('rgb(9, 9, 9)')
+
+  // The resting state is untouched, so it produces no attribution at all.
+  expect(result.attributions.some((a) => a.state === 'default')).toBe(false)
+})
+
+test('a padding change under :hover is explained by the rule that set it', async ({ page }) => {
+  const before = await snap(page, '/hover-layout.html', { rules: true, states: ['hover'] })
+  const after = await snap(page, '/hover-layout-changed.html', { rules: true, states: ['hover'] })
+  const result = diff(before, after)
+
+  const hover = result.attributions.find((a) => a.state === 'hover' && a.key === '@a')!
+  const cause = hover.causes.find((c) => c.property === 'padding')!
+  expect(cause.before!.selector).toBe('.btn:hover')
+  expect(cause.before!.shorthand).toBe('padding: 24px 16px')
+  expect(cause.after!.shorthand).toBe('padding: 40px 16px')
 })

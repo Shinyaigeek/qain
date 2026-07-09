@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { FORMAT_VERSION } from '@qain/core'
 import { expect, test } from '@qain/playwright'
 
 // The matcher writes a baseline on first run and fails, exactly as Playwright's
@@ -20,7 +21,7 @@ test('writes a baseline on first run, then matches it', async ({ page }, testInf
     }).rejects.toThrow(/wrote a new style baseline/)
 
     const written = JSON.parse(await readFile(path, 'utf8'))
-    expect(written.qain).toBe(1)
+    expect(written.qain).toBe(FORMAT_VERSION)
     expect(written.states[0].state).toBe('default')
 
     // Second run: the page has not changed.

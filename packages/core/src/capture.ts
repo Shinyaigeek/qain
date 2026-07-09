@@ -135,7 +135,30 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
   }
   const defaultParsed = parse(await takeSnapshot(), parseOptions)
 
-  const captured: CapturedState[] = [{ state: 'default', nodes: defaultParsed.nodes }]
+  const takeRules = options.rules
+    ? (targets: RuleTarget[]) =>
+        captureRules(cdp, targets, headers, {
+          includeUserAgent: options.includeUserAgentRules ?? false,
+        })
+    : undefined
+
+  const defaultRules = takeRules
+    ? await takeRules(
+        defaultParsed.nodes.map((node, i) => ({
+          key: node.key,
+          backendNodeId: defaultParsed.backendIds[i]!,
+          ...(node.pseudo ? { pseudo: node.pseudo } : {}),
+        })),
+      )
+    : undefined
+
+  const captured: CapturedState[] = [
+    {
+      state: 'default',
+      nodes: defaultParsed.nodes,
+      ...(defaultRules ? { rules: defaultRules } : {}),
+    },
+  ]
 
   if (states.length > 0) {
     const candidates = await findCandidates(
@@ -157,24 +180,11 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
         parse: (snap) => parse(snap, parseOptions),
         defaultParsed,
         strategy: options.strategy ?? 'auto',
+        ...(takeRules ? { takeRules } : {}),
       })
       captured.push(result.state)
       warnings.push(...result.warnings)
     }
-  }
-
-  let rules: RuleIndex | undefined
-  if (options.rules) {
-    rules = await captureRules(
-      cdp,
-      defaultParsed.nodes.map((node, i) => ({
-        key: node.key,
-        backendNodeId: defaultParsed.backendIds[i]!,
-        ...(node.pseudo ? { pseudo: node.pseudo } : {}),
-      })),
-      headers,
-      { includeUserAgent: options.includeUserAgentRules ?? false },
-    )
   }
 
   return {
@@ -184,7 +194,6 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
     viewport,
     projection,
     states: captured,
-    ...(rules ? { rules } : {}),
     warnings,
   }
 }
@@ -205,6 +214,14 @@ interface StateContext {
   parse: (snap: CaptureSnapshotResult) => Parsed
   defaultParsed: Parsed
   strategy: 'auto' | 'bulk' | 'isolated'
+  /** Fetch matched rules for these nodes. Must run while the pseudo-class is forced. */
+  takeRules?: (targets: RuleTarget[]) => Promise<RuleIndex>
+}
+
+interface RuleTarget {
+  key: string
+  backendNodeId: number
+  pseudo?: string
 }
 
 async function captureState(
@@ -225,17 +242,25 @@ async function captureState(
       ),
     )
 
-  const subtreeOf = (parsed: Parsed, backendNodeId: number): QainNode[] => {
+  const subtreeOf = (parsed: Parsed, backendNodeId: number): number[] => {
     const rootIndex = parsed.byBackendId.get(backendNodeId)
-    if (rootIndex === undefined) return []
-    return descendants(parsed, rootIndex).map((i) => parsed.nodes[i]!)
+    return rootIndex === undefined ? [] : descendants(parsed, rootIndex)
   }
+
+  const targetsOf = (parsed: Parsed, indexes: number[]): RuleTarget[] =>
+    indexes.map((i) => {
+      const node = parsed.nodes[i]!
+      return {
+        key: node.key,
+        backendNodeId: parsed.backendIds[i]!,
+        ...(node.pseudo ? { pseudo: node.pseudo } : {}),
+      }
+    })
 
   if (ctx.strategy !== 'isolated') {
     const ids = candidates.map((c) => c.nodeId)
     await force(ids, [state])
     const bulk = ctx.parse(await ctx.takeSnapshot())
-    await force(ids, [])
 
     const forcedIndexes = new Set<number>()
     for (const candidate of candidates) {
@@ -246,13 +271,19 @@ async function captureState(
     const contamination = detectContamination(ctx.defaultParsed, bulk, forcedIndexes, candidates)
 
     if (ctx.strategy === 'bulk' || contamination === null) {
-      const nodes = candidates.flatMap((c) => subtreeOf(bulk, c.backendNodeId))
+      const indexes = candidates.flatMap((c) => subtreeOf(bulk, c.backendNodeId))
+      // Still forced: this is the only moment `.btn:hover` is a matching rule.
+      const rules = ctx.takeRules ? await ctx.takeRules(targetsOf(bulk, indexes)) : undefined
+      await force(ids, [])
+
+      const nodes = indexes.map((i) => bulk.nodes[i]!)
       if (ctx.strategy === 'bulk' && contamination !== null) {
         warnings.push(`:${state} bulk capture is contaminated — ${contamination}`)
       }
-      return { state: { state, strategy: 'bulk', nodes }, warnings }
+      return { state: { state, strategy: 'bulk', nodes, ...(rules ? { rules } : {}) }, warnings }
     }
 
+    await force(ids, [])
     warnings.push(
       `:${state} perturbs the page beyond the elements being forced (${contamination}), ` +
         `so qain fell back to isolated capture: ${candidates.length} extra snapshots`,
@@ -261,13 +292,19 @@ async function captureState(
 
   // Isolated: force one node at a time so nothing can displace anything else.
   const nodes: QainNode[] = []
+  const rules: RuleIndex = {}
   for (const candidate of candidates) {
     await force([candidate.nodeId], [state])
     const parsed = ctx.parse(await ctx.takeSnapshot())
+    const indexes = subtreeOf(parsed, candidate.backendNodeId)
+    if (ctx.takeRules) Object.assign(rules, await ctx.takeRules(targetsOf(parsed, indexes)))
     await force([candidate.nodeId], [])
-    nodes.push(...subtreeOf(parsed, candidate.backendNodeId))
+    nodes.push(...indexes.map((i) => parsed.nodes[i]!))
   }
-  return { state: { state, strategy: 'isolated', nodes }, warnings }
+  return {
+    state: { state, strategy: 'isolated', nodes, ...(ctx.takeRules ? { rules } : {}) },
+    warnings,
+  }
 }
 
 /**

@@ -1,5 +1,5 @@
 import { type Declaration, type RuleIndex, winner } from './rules.js'
-import type { Change } from './types.js'
+import type { CapturedState, Change, StateName } from './types.js'
 
 /**
  * Attribution: turning "this button grew 24px" into "`.btn` in base.html:5 changed
@@ -20,6 +20,11 @@ export interface DeclarationChange {
 }
 
 export interface Attribution {
+  /**
+   * The state whose cascade was consulted. A `:hover` change is explained by the
+   * rules that matched while `:hover` was forced, never by the resting ones.
+   */
+  state: StateName
   key: string
   path: string
   causes: DeclarationChange[]
@@ -106,44 +111,65 @@ export interface ExplainOptions {
 /**
  * Explains a set of changes against the rules captured alongside each snapshot.
  *
- * Pure: takes the two `RuleIndex` values from `snapshot.rules` and reports which
- * winning declaration moved. Returns nothing when either snapshot was captured
- * without `rules: true`.
+ * Grouping is by (state, key), not by key. `CSS.getMatchedStylesForNode` does not
+ * return `.btn:hover` unless the node is currently forced into `:hover`, so the
+ * resting cascade cannot explain a hover regression — and pointing at it would name
+ * a rule that has nothing to do with the change.
+ *
+ * Pure: reads the `rules` each state carries. States captured without `rules: true`
+ * yield no attributions.
  */
 export function explain(
   changes: Change[],
-  beforeRules: RuleIndex | undefined,
-  afterRules: RuleIndex | undefined,
+  before: CapturedState[],
+  after: CapturedState[],
   options: ExplainOptions = {},
 ): Attribution[] {
-  if (!beforeRules || !afterRules) return []
+  const rulesFor = (states: CapturedState[], state: StateName): RuleIndex | undefined =>
+    states.find((s) => s.state === state)?.rules
 
-  const byKey = new Map<string, { path: string; properties: Set<string> }>()
+  const grouped = new Map<
+    string,
+    { state: StateName; key: string; path: string; properties: Set<string> }
+  >()
   for (const change of changes) {
     if (!options.includeDerived && 'cause' in change && change.cause === 'derived') continue
     const properties = suspects(change)
     if (properties.length === 0) continue
+    if (!rulesFor(before, change.state) || !rulesFor(after, change.state)) continue
 
-    const entry = byKey.get(change.key) ?? { path: change.path, properties: new Set<string>() }
+    const id = `${change.state}\u0000${change.key}`
+    const entry = grouped.get(id) ?? {
+      state: change.state,
+      key: change.key,
+      path: change.path,
+      properties: new Set<string>(),
+    }
     for (const property of properties) entry.properties.add(property)
-    byKey.set(change.key, entry)
+    grouped.set(id, entry)
   }
 
   const attributions: Attribution[] = []
-  for (const [key, { path, properties }] of byKey) {
-    const before = beforeRules[key] ?? []
-    const after = afterRules[key] ?? []
+  for (const { state, key, path, properties } of grouped.values()) {
+    const beforeRules = rulesFor(before, state)![key] ?? []
+    const afterRules = rulesFor(after, state)![key] ?? []
 
     const causes: DeclarationChange[] = []
     for (const property of properties) {
-      const from = winner(before, property)
-      const to = winner(after, property)
+      const from = winner(beforeRules, property)
+      const to = winner(afterRules, property)
       if (!from && !to) continue
       if (from && to && same(from, to)) continue
       causes.push({ property, before: from, after: to })
     }
 
-    attributions.push({ key, path, causes: dedupe(causes), unattributed: causes.length === 0 })
+    attributions.push({
+      state,
+      key,
+      path,
+      causes: dedupe(causes),
+      unattributed: causes.length === 0,
+    })
   }
   return attributions
 }
