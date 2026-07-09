@@ -1,0 +1,12 @@
+packages:
+  - 'packages/*'
+  - 'e2e'
+
+catalog:
+  playwright-core: ^1.61.1
+  '@playwright/test': ^1.61.1
+
+allowBuilds:
+  '@biomejs/biome': true
+  playwright-core: true
+  '@playwright/test': true

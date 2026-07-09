@@ -1,0 +1,16 @@
+<!doctype html><meta charset=utf-8><title>qain fixture</title>
+<style>
+  body { margin: 0; font: 16px/1.5 system-ui, sans-serif; }
+  .stack { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+  .btn { border: 0; padding: 8px 16px; background: rgb(59, 130, 246); color: rgb(255, 255, 255); }
+  .btn:hover { background: rgb(37, 99, 235); }
+  .note { color: rgb(190, 190, 190); background: rgb(255, 255, 255); }
+  .panel { background: rgb(0, 0, 255); padding: 16px; }
+  .overlay { background: rgba(255, 255, 255, 0.5); color: rgb(0, 0, 0); padding: 8px; }
+</style>
+<div class="stack">
+  <button class="btn" data-testid="submit">Submit</button>
+  <button class="btn" data-testid="cancel">Cancel</button>
+  <p class="note" data-testid="note">Readable note text</p>
+</div>
+<div class="panel"><div class="overlay" data-testid="overlay">Overlay text</div></div>

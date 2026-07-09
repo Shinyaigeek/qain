@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+test-results/
+playwright-report/
+.DS_Store
+
+# Baselines written by tests that use an explicit --path
+*.spec.ts-snapshots/

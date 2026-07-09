@@ -1,0 +1,17 @@
+{
+  "name": "qain",
+  "version": "0.1.0",
+  "description": "Semantic style-regression testing for the browser. CLI.",
+  "type": "module",
+  "bin": { "qain": "./dist/index.js" },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@qain/core": "workspace:*",
+    "playwright-core": "catalog:"
+  },
+  "license": "MIT"
+}
