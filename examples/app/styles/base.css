@@ -1,0 +1,56 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font: 16px / 1.5 system-ui, sans-serif;
+  background: rgb(255, 255, 255);
+}
+
+.bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+}
+
+/* Positioned so the badge can be stacked above it — and so a z-index regression
+   is something qain can see. */
+.title {
+  position: relative;
+  z-index: 1;
+  font-size: 20px;
+  margin: 0;
+  background: rgb(255, 255, 255);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+}
+
+.card {
+  padding: 16px;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 8px;
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+.figure {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}

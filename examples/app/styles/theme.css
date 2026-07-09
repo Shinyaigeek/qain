@@ -1,0 +1,33 @@
+.btn {
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 16px;
+  background: rgb(243, 244, 246);
+  color: rgb(17, 24, 39);
+}
+
+.btn-primary {
+  background: rgb(37, 99, 235);
+  color: rgb(255, 255, 255);
+}
+
+.btn-primary:hover {
+  background: rgb(29, 78, 216);
+}
+
+.badge {
+  position: absolute;
+  left: 56px;
+  z-index: 2;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(219, 234, 254);
+  color: rgb(30, 64, 175);
+  font-size: 12px;
+}
+
+.muted {
+  color: rgb(107, 114, 128);
+  font-size: 14px;
+  margin: 4px 0 0;
+}

@@ -5,6 +5,7 @@ import {
   DEFAULT_BOX_TOLERANCE,
   DEFAULT_IGNORED_ATTRIBUTES,
   DEFAULT_IGNORED_PROPERTIES,
+  GEOMETRIC_PROPERTIES,
 } from './projection.js'
 import {
   type Box,
@@ -129,7 +130,10 @@ function diffState(
   const beforeByKey = byKey(before)
   const afterByKey = byKey(after)
 
-  /** Keys whose own content changed. These are causes by definition. */
+  /**
+   * Keys that changed in a way capable of moving or resizing a box. A colour change
+   * is a change, but it is not a reason for anything to move.
+   */
   const selfChanged = new Set<string>()
   const boxChanged = new Map<string, { before: Box | null; after: Box | null }>()
   const pending: Change[] = []
@@ -164,7 +168,7 @@ function diffState(
         CURRENT_COLOR_PROPERTIES.has(property) && from === a.styles.color && to === b.styles.color
       const cause: Cause = tracksColor ? 'derived' : 'primary'
 
-      if (!tracksColor) selfChanged.add(key)
+      if (!tracksColor && GEOMETRIC_PROPERTIES.has(property)) selfChanged.add(key)
       pending.push({
         kind: 'style',
         state,

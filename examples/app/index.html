@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Acme — Billing</title>
+  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="stylesheet" href="/styles/theme.css">
+</head>
+<body>
+  <header class="bar css-a1b2c3">
+    <h1 class="title">Billing</h1>
+    <span class="badge" data-testid="plan-badge">Pro</span>
+  </header>
+
+  <main class="stack">
+    <section class="card css-a1b2c3" data-testid="usage-card">
+      <h2 class="card-title">Usage</h2>
+      <p class="figure" data-testid="usage-figure">18,204</p>
+      <p class="muted" data-testid="usage-note">requests this month</p>
+    </section>
+
+    <section class="card css-a1b2c3" data-testid="invoice-card">
+      <h2 class="card-title">Next invoice</h2>
+      <p class="figure" data-testid="invoice-figure">$142.00</p>
+      <p class="muted" data-testid="invoice-note">charged on 1 August</p>
+    </section>
+
+    <div class="actions">
+      <button class="btn btn-primary" data-testid="pay">Pay now</button>
+      <button class="btn" data-testid="download">Download invoice</button>
+    </div>
+
+    <footer class="muted" data-testid="footnote">
+      Prices exclude VAT. <a href="/terms" data-testid="terms">Terms apply</a>.
+    </footer>
+  </main>
+</body>
+</html>

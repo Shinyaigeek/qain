@@ -131,3 +131,21 @@ test('a viewport mismatch is a warning, not a silent wrong answer', async ({ pag
   const result = diff(before, after)
   expect(result.warnings.join('\n')).toContain('viewport differs')
 })
+
+test('a recoloured element that gets pushed reports the move as derived', async ({ page }) => {
+  // The footnote-like `.note` changes colour *and* is displaced by the buttons
+  // growing. Colour cannot move a box, so only the colour is a cause.
+  const before = await snap(page, '/base.html')
+  await page.goto('/derived-shift.html')
+  await page.addStyleTag({ content: '.note { color: rgb(190, 190, 190); }' })
+  const cdp = (await page.context().newCDPSession(page)) as unknown as CdpSession
+  const after = await capture(cdp)
+
+  const changes = diff(before, after).changes.filter((c) => c.key === '@note')
+  const style = changes.find((c) => c.kind === 'style' && c.property === 'color')
+  const box = changes.find((c) => c.kind === 'box')
+
+  expect(style?.kind === 'style' && style.cause).toBe('primary')
+  expect(box?.kind === 'box' && box.delta.dy).toBeGreaterThan(0)
+  expect(box?.kind === 'box' && box.cause).toBe('derived')
+})

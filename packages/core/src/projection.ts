@@ -15,8 +15,8 @@
  *
  * The projection answers "what changed". Answering "why" needs the matched CSS
  * rules (CSS.getMatchedStylesForNode), which is where `padding` reappears as the
- * reason behind a box change. That is a second query against the one node that
- * moved, not something worth carrying in every snapshot. Not implemented yet.
+ * reason behind a box change — see rules.ts and explain.ts. That is a second query
+ * against the one node that moved, not something worth carrying in every snapshot.
  */
 export const DEFAULT_PROJECTION: readonly string[] = [
   // typography
@@ -183,6 +183,45 @@ export const DEFAULT_EXCLUDED_ATTRIBUTES: readonly string[] = [
  * The computed styles already tell you if the *rendering* changed.
  */
 export const DEFAULT_IGNORED_ATTRIBUTES: readonly string[] = ['class']
+
+/**
+ * Projected properties that can move or resize a box.
+ *
+ * `color` cannot. Neither can `background-color`, `box-shadow` or `opacity`. So when
+ * a node is recoloured *and* displaced by something else on the page, the displacement
+ * is still collateral — the recolouring did not cause it. Without this distinction,
+ * every element that changes colour inside a reflow gets promoted to a cause, and the
+ * causes stop being the short list they are supposed to be.
+ */
+export const GEOMETRIC_PROPERTIES: ReadonlySet<string> = new Set([
+  'display',
+  'position',
+  'float',
+  'overflow-x',
+  'overflow-y',
+  'flex-direction',
+  'flex-wrap',
+  'justify-content',
+  'align-items',
+  'gap',
+  'grid-template-columns',
+  'grid-template-rows',
+  'transform',
+  'font-family',
+  'font-size',
+  'font-weight',
+  'font-style',
+  'line-height',
+  'letter-spacing',
+  'text-align',
+  'text-transform',
+  'white-space',
+  'word-break',
+  'border-top-width',
+  'border-right-width',
+  'border-bottom-width',
+  'border-left-width',
+])
 
 /** Sub-pixel layout jitter, in CSS pixels, treated as no change. */
 export const DEFAULT_BOX_TOLERANCE = 0.5

@@ -1,0 +1,16 @@
+{
+  "name": "qain-examples",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node app/server.mjs",
+    "demo": "node scripts/demo.mjs",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "catalog:",
+    "@qain/core": "workspace:*",
+    "@qain/playwright": "workspace:*",
+    "qain": "workspace:*"
+  }
+}

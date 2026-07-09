@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
   - 'e2e'
+  - 'examples'
 
 catalog:
   playwright-core: ^1.61.1

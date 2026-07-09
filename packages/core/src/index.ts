@@ -29,6 +29,7 @@ export {
   DEFAULT_IGNORED_PROPERTIES,
   DEFAULT_INTERACTIVE_SELECTOR,
   DEFAULT_PROJECTION,
+  GEOMETRIC_PROPERTIES,
   NON_RENDERED_TAGS,
 } from './projection.js'
 export { formatHtml, formatText } from './report.js'

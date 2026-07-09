@@ -158,12 +158,23 @@ A ratio that crosses a WCAG threshold is reported by name.
 `@qain/core` asks only for `{ send(method, params) }`, so it works with
 Playwright, Puppeteer, or a raw CDP socket.
 
+## Examples
+
+`examples/` is a billing page plus a commit that breaks it four ways at once — a
+reflow, a contrast regression, a stacking-order change, a `:hover` state that
+stopped differing — alongside a utility-class rehash that must produce no diff at
+all. It runs, and it asserts what it demonstrates.
+
+```sh
+pnpm demo    # the CLI workflow, end to end against the real binary
+```
+
 ## Development
 
 ```sh
 pnpm install
 pnpm build
-pnpm test          # e2e, needs Chrome
+pnpm test          # e2e + examples, needs Chrome
 ```
 
 Descended from [computed-styles-regression-test](https://github.com/Shinyaigeek/computed-styles-regression-test),
