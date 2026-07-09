@@ -1,4 +1,5 @@
 import { computeContrast, crossedThreshold, isLargeText } from './contrast.js'
+import { explain } from './explain.js'
 import {
   CURRENT_COLOR_PROPERTIES,
   DEFAULT_BOX_TOLERANCE,
@@ -93,11 +94,17 @@ export function diff(before: Snapshot, after: Snapshot, options: DiffOptions = {
 
   const filtered = options.omitDerived ? changes.filter((c) => !isDerived(c)) : changes
 
+  if (filtered.length > 0 && Boolean(before.rules) !== Boolean(after.rules)) {
+    warnings.push('only one snapshot carries matched rules, so changes cannot be attributed')
+  }
+  const attributions = explain(filtered, before.rules, after.rules)
+
   return {
     qain: FORMAT_VERSION,
     before: { url: before.url, title: before.title },
     after: { url: after.url, title: after.title },
     changes: filtered,
+    attributions,
     summary: summarise(filtered),
     warnings: [...warnings, ...before.warnings, ...after.warnings],
   }

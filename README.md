@@ -12,6 +12,7 @@ default state
   html > body > div > p[data-testid=note]
     color: rgb(90, 90, 90) → rgb(190, 190, 190)
     contrast 6.9 → 1.86  ✗ falls below WCAG AA-normal
+    ← .note { color: rgb(90, 90, 90) → rgb(190, 190, 190) }  theme.css:12:3
 
 6 derived changes (a consequence of the above)
   ... border-top-color, outline-color, text-decoration-color (follows color)
@@ -34,9 +35,9 @@ pnpm add -D @qain/core        # library
 ## CLI — for humans and coding agents
 
 ```sh
-qain snap http://localhost:3000 -o before.json
+qain snap http://localhost:3000 --rules -o before.json
 # ... change the code ...
-qain snap http://localhost:3000 -o after.json
+qain snap http://localhost:3000 --rules -o after.json
 qain diff before.json after.json --omit-derived
 ```
 
@@ -94,6 +95,41 @@ one snapshot per element when it did. A `:hover` that changes `padding` displace
 its siblings; a `.btn:hover ~ .panel` rule restyles a node that is not hovered.
 Both are caught. Neither is guessed at.
 
+## Why it names the rule
+
+`--rules` records the matched CSS declarations alongside the snapshot, so the diff
+can point at the line that caused each change:
+
+```
+button[data-testid=submit]
+  resized 0px × +24px
+  ← .btn { padding: 8px 16px → 20px 16px }  buttons.css:3:3
+```
+
+`padding` is not in the projection — by design, since the box already reports its
+effect. Attribution buys the information back from the author's declaration rather
+than its resolved consequence, and only for the nodes that changed.
+
+Two things this required getting right, both of which are easy to get wrong:
+
+**Chromium's `matchedCSSRules` is sorted by specificity, not by the cascade.**
+`!important` is not folded into that order, and `style=""` is not in the array at
+all. Reading the array backwards and taking the first hit — the obvious
+implementation — picks the wrong rule whenever `!important` is involved. qain
+resolves importance, origin, and inline explicitly, and the e2e suite asserts the
+declaration it picks equals the value Chromium computed.
+
+**Nobody writes `padding-top`.** Declarations are expanded through
+`longhandProperties` so a `padding-top` change finds `padding: 8px 16px`, then
+collapsed back so one edit reads as one cause rather than four.
+
+When a primary change has no declaration behind it — a longer label widened the
+button — qain says `no CSS declaration on this node changed` instead of blaming a
+rule that happens to mention `width`. Derived changes are never attributed at all;
+their cause is another node.
+
+Cost: one CDP round-trip per node, and roughly 3× the snapshot size. Hence opt-in.
+
 ## Contrast
 
 Because Chromium reports the *composited* background (`blendedBackgroundColors`),
@@ -105,10 +141,10 @@ A ratio that crosses a WCAG threshold is reported by name.
 
 - **Replay.** Snapshots are data, not a reconstructed page. The Playwright HTML
   report is the viewer.
-- **Explain.** The diff says `background-color` changed; it does not yet say which
-  CSS rule changed it. That needs `CSS.getMatchedStylesForNode` against the one
-  node that moved — a second query, not something worth carrying in every
-  snapshot.
+- **Attribute pseudo-states.** `rules` are captured for the default state only.
+- **Attribute across nodes.** A rule that stopped matching because a class changed
+  shows up as a declaration appearing or disappearing, not as "you removed
+  `.primary`".
 - **Cross-browser.** See above.
 
 ## Layout

@@ -1,3 +1,5 @@
+import { type Attribution, describeCause } from './explain.js'
+import { formatSource } from './rules.js'
 import { type Change, type Diff, isDerived } from './types.js'
 
 /**
@@ -22,6 +24,7 @@ export function formatText(diff: Diff, options: { color?: boolean } = {}): strin
 
   const primary = diff.changes.filter((x) => !isDerived(x))
   const derived = diff.changes.filter(isDerived)
+  const byKeyAttribution = indexAttributions(diff.attributions)
 
   const byState = new Map<string, Change[]>()
   for (const change of primary) {
@@ -41,6 +44,7 @@ export function formatText(diff: Diff, options: { color?: boolean } = {}): strin
     for (const [path, group] of byPath) {
       lines.push(`  ${path}`)
       for (const change of group) lines.push(`    ${describe(change, { red, green, dim, yellow })}`)
+      for (const line of causeLines(byKeyAttribution, group)) lines.push(dim(`    ${line}`))
     }
     lines.push('')
   }
@@ -66,6 +70,31 @@ export function formatText(diff: Diff, options: { color?: boolean } = {}): strin
       `${summary.primary} primary, ${summary.derived} derived`,
   )
   return lines.join('\n')
+}
+
+function indexAttributions(attributions: Attribution[]): Map<string, Attribution> {
+  return new Map(attributions.map((a) => [a.key, a]))
+}
+
+/**
+ * The `← ` lines under a change: which declaration moved, and where it lives.
+ * Emitted once per node, not once per change, since one `padding` edit shows up as
+ * both a resize and a shift.
+ */
+function causeLines(index: Map<string, Attribution>, group: Change[]): string[] {
+  const key = group[0]?.key
+  const attribution = key ? index.get(key) : undefined
+  if (!attribution) return []
+
+  // Silence here would read as "no cause", when it means "the cause is not CSS" \u2014
+  // a longer label, an injected element, a rule that stopped matching.
+  if (attribution.unattributed) return ['\u2190 no CSS declaration on this node changed']
+
+  return attribution.causes.map((cause) => {
+    const site = cause.after ?? cause.before
+    const where = site?.inline ? 'style attribute' : formatSource(site?.source ?? null)
+    return `\u2190 ${describeCause(cause)}  ${where}`
+  })
 }
 
 type Paint = Record<'red' | 'green' | 'dim' | 'yellow', (s: string) => string>
@@ -115,17 +144,37 @@ export function formatHtml(diff: Diff): string {
   const primary = diff.changes.filter((x) => !isDerived(x))
   const derived = diff.changes.filter(isDerived)
 
-  const rows = (changes: Change[]) =>
-    changes
-      .map(
-        (change) => `<tr class="k-${change.kind}">
+  const index = indexAttributions(diff.attributions)
+  const rows = (changes: Change[], withCauses: boolean) => {
+    // One padding edit surfaces as both a resize and a shift. Name its cause once.
+    const explained = new Set<string>()
+    return changes
+      .map((change) => {
+        const shown = withCauses && !explained.has(change.key)
+        if (shown) explained.add(change.key)
+        const attribution = shown ? index.get(change.key) : undefined
+        const causes = !attribution
+          ? ''
+          : attribution.unattributed
+            ? '<div class="cause">\u2190 no CSS declaration on this node changed</div>'
+            : `<div class="cause">${attribution.causes
+                .map((cause) => {
+                  const site = cause.after ?? cause.before
+                  const where = site?.inline
+                    ? 'style attribute'
+                    : formatSource(site?.source ?? null)
+                  return `\u2190 <code>${esc(describeCause(cause))}</code> <span class="where">${esc(where)}</span>`
+                })
+                .join('<br>')}</div>`
+        return `<tr class="k-${change.kind}">
       <td class="state">${esc(change.state)}</td>
       <td class="path"><code>${esc(change.path)}</code></td>
       <td class="kind">${esc(change.kind)}</td>
-      <td class="detail">${htmlDetail(change)}</td>
-    </tr>`,
-      )
+      <td class="detail">${htmlDetail(change)}${causes}</td>
+    </tr>`
+      })
       .join('\n')
+  }
 
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -159,6 +208,8 @@ export function formatHtml(diff: Diff): string {
   .warn { color:var(--warn); }
   .empty { color:var(--dim); }
   details summary { cursor:pointer; color:var(--dim); }
+  .cause { margin-top:.3rem; color:var(--dim); font-size:12px; }
+  .where { opacity:.75; }
 </style></head><body>
 <h1>qain diff</h1>
 <div class="meta"><code>${esc(diff.before.url)}</code> → <code>${esc(diff.after.url)}</code></div>
@@ -172,13 +223,13 @@ export function formatHtml(diff: Diff): string {
 ${diff.warnings.length ? `<div class="warn">${diff.warnings.map((w) => `⚠ ${esc(w)}`).join('<br>')}</div>` : ''}
 
 <h2>Primary <small>— the node itself changed</small></h2>
-${primary.length ? `<div class="scroll"><table>${rows(primary)}</table></div>` : '<p class="empty">None.</p>'}
+${primary.length ? `<div class="scroll"><table>${rows(primary, true)}</table></div>` : '<p class="empty">None.</p>'}
 
 <h2>Derived <small>— a consequence of a change above</small></h2>
 ${
   derived.length
     ? `<details><summary>${derived.length} change${derived.length === 1 ? '' : 's'}</summary>
-       <div class="scroll"><table>${rows(derived)}</table></div></details>`
+       <div class="scroll"><table>${rows(derived, false)}</table></div></details>`
     : '<p class="empty">None.</p>'
 }
 </body></html>`

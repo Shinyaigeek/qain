@@ -11,6 +11,13 @@
  */
 export interface CdpSession {
   send(method: string, params?: Record<string, unknown>): Promise<any>
+  /**
+   * Optional. Only `capture({ rules: true })` needs it, to collect
+   * `CSS.styleSheetAdded` and learn each stylesheet's URL — there is no command
+   * that returns a stylesheet header. Without it, rules still carry their
+   * selector, but no `file:line`.
+   */
+  on?(event: string, handler: (params: any) => void): void
 }
 
 // ---------------------------------------------------------------------------
@@ -88,6 +95,49 @@ export interface AxNode {
   role?: { value?: string }
   name?: { value?: string }
   backendDOMNodeId?: number
+}
+
+// --- CSS domain, for rule attribution --------------------------------------
+
+export interface SourceRange {
+  startLine: number
+  startColumn: number
+  endLine: number
+  endColumn: number
+}
+
+export interface CssProperty {
+  name: string
+  value: string
+  important?: boolean
+  /** Chromium synthesised this from a shorthand rather than the author writing it. */
+  implicit?: boolean
+  text?: string
+  parsedOk?: boolean
+  /** Lost the cascade within its own rule, or is commented out. */
+  disabled?: boolean
+  range?: SourceRange
+  /** Present on shorthands: the longhands this expands to. */
+  longhandProperties?: { name: string; value: string }[]
+}
+
+export interface RuleMatch {
+  rule: {
+    styleSheetId?: string
+    origin: 'regular' | 'user-agent' | 'injected' | 'inspector'
+    selectorList?: { text?: string }
+    style?: { cssProperties?: CssProperty[] }
+  }
+  matchingSelectors: number[]
+}
+
+export interface StyleSheetHeader {
+  styleSheetId: string
+  sourceURL?: string
+  isInline?: boolean
+  /** Where the `<style>` element starts in the host document. */
+  startLine?: number
+  startColumn?: number
 }
 
 /** Resolve a sparse entry, or undefined if this index has none. */

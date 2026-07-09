@@ -1,3 +1,6 @@
+import type { Attribution } from './explain.js'
+import type { RuleIndex } from './rules.js'
+
 /** Bumped whenever the on-disk snapshot shape changes incompatibly. */
 export const FORMAT_VERSION = 1
 
@@ -68,6 +71,11 @@ export interface Snapshot {
   /** The computed-style properties this snapshot recorded. Diffing is scoped to these. */
   projection: string[]
   states: CapturedState[]
+  /**
+   * Matched author declarations per node, for the default state. Present only when
+   * captured with `rules: true`. Lets a diff say which rule caused each change.
+   */
+  rules?: RuleIndex
   warnings: string[]
 }
 
@@ -139,6 +147,8 @@ export interface Diff {
   before: { url: string; title: string }
   after: { url: string; title: string }
   changes: Change[]
+  /** Which CSS declaration caused each primary change. Empty unless both snapshots carry rules. */
+  attributions: Attribution[]
   summary: DiffSummary
   warnings: string[]
 }

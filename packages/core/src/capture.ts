@@ -2,7 +2,7 @@ import {
   type AxNode,
   type CaptureSnapshotResult,
   type CdpSession,
-  type DocumentSnapshot,
+  type StyleSheetHeader,
   rare,
   rareBool,
   str,
@@ -14,6 +14,7 @@ import {
   DEFAULT_PROJECTION,
   NON_RENDERED_TAGS,
 } from './projection.js'
+import { type RuleIndex, captureRules } from './rules.js'
 import {
   type Box,
   type CapturedState,
@@ -21,7 +22,6 @@ import {
   type PseudoState,
   type QainNode,
   type Snapshot,
-  type StateName,
 } from './types.js'
 
 export interface CaptureOptions {
@@ -40,6 +40,13 @@ export interface CaptureOptions {
    * captures when it did. 'bulk' and 'isolated' pin the choice.
    */
   strategy?: 'auto' | 'bulk' | 'isolated'
+  /**
+   * Also record the matched CSS rules for every node, so a later diff can name the
+   * declaration behind each change. Costs one CDP round-trip per node — opt in.
+   */
+  rules?: boolean
+  /** Include the user-agent stylesheet in `rules`. Large, and nobody edited it. */
+  includeUserAgentRules?: boolean
 }
 
 interface Parsed {
@@ -64,6 +71,21 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
   const excluded = new Set(options.excludeAttributes ?? DEFAULT_EXCLUDED_ATTRIBUTES)
   const states = options.states ?? []
   const warnings: string[] = []
+
+  // There is no command that returns a stylesheet header, only an event, and it
+  // only fires for sheets seen after CSS.enable. Subscribe before enabling.
+  const headers = new Map<string, StyleSheetHeader>()
+  if (options.rules) {
+    if (typeof cdp.on === 'function') {
+      cdp.on('CSS.styleSheetAdded', ({ header }: { header: StyleSheetHeader }) =>
+        headers.set(header.styleSheetId, header),
+      )
+    } else {
+      warnings.push(
+        'this CDP session cannot subscribe to events, so rules carry no source location',
+      )
+    }
+  }
 
   await cdp.send('DOM.enable')
   await cdp.send('CSS.enable')
@@ -133,6 +155,20 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
     }
   }
 
+  let rules: RuleIndex | undefined
+  if (options.rules) {
+    rules = await captureRules(
+      cdp,
+      defaultParsed.nodes.map((node, i) => ({
+        key: node.key,
+        backendNodeId: defaultParsed.backendIds[i]!,
+        ...(node.pseudo ? { pseudo: node.pseudo } : {}),
+      })),
+      headers,
+      { includeUserAgent: options.includeUserAgentRules ?? false },
+    )
+  }
+
   return {
     qain: FORMAT_VERSION,
     url: defaultParsed.url,
@@ -140,6 +176,7 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
     viewport,
     projection,
     states: captured,
+    ...(rules ? { rules } : {}),
     warnings,
   }
 }

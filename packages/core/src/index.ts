@@ -12,6 +12,13 @@ export {
   type Rgba,
 } from './contrast.js'
 export { diff, type DiffOptions } from './diff.js'
+export {
+  type Attribution,
+  type DeclarationChange,
+  describeCause,
+  explain,
+  type ExplainOptions,
+} from './explain.js'
 export { absoluteKey, assignKeys, relativeKey } from './identity.js'
 export {
   BOX_DERIVED_PROPERTIES,
@@ -25,6 +32,17 @@ export {
   NON_RENDERED_TAGS,
 } from './projection.js'
 export { formatHtml, formatText } from './report.js'
+export {
+  captureRules,
+  type CaptureRulesOptions,
+  type Declaration,
+  formatSource,
+  type Origin,
+  precedence,
+  type RuleIndex,
+  type SourceLocation,
+  winner,
+} from './rules.js'
 export {
   type Box,
   type CapturedState,

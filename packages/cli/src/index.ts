@@ -26,6 +26,9 @@ snap options
       --wait <ms>          settle time after load (default 0)
       --wait-for <css>     wait for this selector before capturing
       --strategy <mode>    auto | bulk | isolated  (default auto)
+      --rules              also record matched CSS rules, so \`qain diff\` can name
+                           the declaration behind each change (one CDP call/node)
+      --ua-rules           include the user-agent stylesheet in --rules
       --browser <path>     Chromium executable to use
       --headed             run with a visible window
 
@@ -65,6 +68,8 @@ async function snap(argv: string[]): Promise<number> {
       wait: { type: 'string' },
       'wait-for': { type: 'string' },
       strategy: { type: 'string', default: 'auto' },
+      rules: { type: 'boolean', default: false },
+      'ua-rules': { type: 'boolean', default: false },
       browser: { type: 'string' },
       headed: { type: 'boolean', default: false },
     },
@@ -102,6 +107,8 @@ async function snap(argv: string[]): Promise<number> {
       ...(values.selector ? { selector: values.selector } : {}),
       states,
       strategy,
+      rules: values.rules,
+      includeUserAgentRules: values['ua-rules'],
     })
 
     const json = `${JSON.stringify(snapshot, null, 2)}\n`
