@@ -7,6 +7,7 @@
     "build": "pnpm -r --filter './packages/*' build",
     "typecheck": "pnpm -r --filter './packages/*' typecheck",
     "test": "pnpm --filter qain-e2e test && pnpm --filter qain-examples test",
+    "browsers": "pnpm --filter qain-e2e exec playwright install chrome chromium",
     "demo": "pnpm --filter qain-examples demo",
     "serve": "pnpm --filter qain-examples serve",
     "check": "biome check .",

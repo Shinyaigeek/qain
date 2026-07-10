@@ -6,12 +6,23 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist"],
+  "files": ["dist", "LICENSE", "README.md"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": { "@qain/core": "workspace:*" },
   "peerDependencies": { "@playwright/test": ">=1.40.0" },
-  "license": "MIT"
+  "keywords": ["playwright", "visual-regression", "computed-styles", "qa", "chromium", "cdp"],
+  "author": "Shinyaigeek",
+  "license": "MIT",
+  "homepage": "https://github.com/Shinyaigeek/qain#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shinyaigeek/qain.git",
+    "directory": "packages/playwright"
+  },
+  "bugs": { "url": "https://github.com/Shinyaigeek/qain/issues" },
+  "engines": { "node": ">=26" },
+  "publishConfig": { "access": "public" }
 }

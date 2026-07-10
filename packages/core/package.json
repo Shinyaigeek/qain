@@ -6,11 +6,21 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist"],
+  "files": ["dist", "LICENSE", "README.md"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "keywords": ["cdp", "chromium", "visual-regression", "computed-styles", "qa", "playwright"],
-  "license": "MIT"
+  "author": "Shinyaigeek",
+  "license": "MIT",
+  "homepage": "https://github.com/Shinyaigeek/qain#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shinyaigeek/qain.git",
+    "directory": "packages/core"
+  },
+  "bugs": { "url": "https://github.com/Shinyaigeek/qain/issues" },
+  "engines": { "node": ">=26" },
+  "publishConfig": { "access": "public" }
 }

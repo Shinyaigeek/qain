@@ -233,14 +233,14 @@ export function describeCause(cause: DeclarationChange): string {
   const site = after ?? before!
   const scope = site.inline ? 'style=""' : (site.selector ?? '?')
 
-  const from = before ? valueOf(before) : '<unset>'
-  const to = after ? valueOf(after) : '<unset>'
+  const from = before ? declaredValue(before) : '<unset>'
+  const to = after ? declaredValue(after) : '<unset>'
   const bang = after?.important ? ' !important' : ''
 
   return `${scope} { ${cause.property}: ${from} → ${to}${bang} }`
 }
 
-function valueOf(declaration: Declaration): string {
+function declaredValue(declaration: Declaration): string {
   const shorthand = declaration.shorthand
   return shorthand
     ? (shorthand.split(':').slice(1).join(':').trim() ?? declaration.value)

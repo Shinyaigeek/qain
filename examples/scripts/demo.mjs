@@ -21,8 +21,12 @@ function qain(args) {
     const child = spawn('qain', args, { stdio: ['ignore', 'pipe', 'pipe'] })
     let stdout = ''
     let stderr = ''
-    child.stdout.on('data', (chunk) => (stdout += chunk))
-    child.stderr.on('data', (chunk) => (stderr += chunk))
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk
+    })
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk
+    })
     child.on('close', (code) => resolve({ code, stdout, stderr }))
   })
 }
@@ -101,8 +105,7 @@ try {
   const stages = html.match(/class="stage"/g)?.length ?? 0
   if (stages !== 2) throw new Error(`expected a before and an after stage, got ${stages}`)
   process.stdout.write(
-    `  ${replay}\n` +
-      '  Open it: fade between before and after to watch the footnote slide 12px.\n',
+    `  ${replay}\n  Open it: fade between before and after to watch the footnote slide 12px.\n`,
   )
 
   process.stdout.write('\n\x1b[32mExample verified.\x1b[0m\n')

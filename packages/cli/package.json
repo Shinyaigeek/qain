@@ -4,7 +4,7 @@
   "description": "Semantic style-regression testing for the browser. CLI.",
   "type": "module",
   "bin": { "qain": "./dist/index.js" },
-  "files": ["dist"],
+  "files": ["dist", "LICENSE", "README.md"],
   "scripts": {
     "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -13,5 +13,15 @@
     "@qain/core": "workspace:*",
     "playwright-core": "catalog:"
   },
-  "license": "MIT"
+  "keywords": ["cli", "visual-regression", "computed-styles", "qa", "chromium", "cdp"],
+  "author": "Shinyaigeek",
+  "license": "MIT",
+  "homepage": "https://github.com/Shinyaigeek/qain#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shinyaigeek/qain.git",
+    "directory": "packages/cli"
+  },
+  "bugs": { "url": "https://github.com/Shinyaigeek/qain/issues" },
+  "engines": { "node": ">=26" }
 }

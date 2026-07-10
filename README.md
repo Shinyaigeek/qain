@@ -227,9 +227,17 @@ pnpm demo    # the CLI workflow, end to end against the real binary
 
 ```sh
 pnpm install
+pnpm browsers      # tests use Chrome, the CLI launches chromium
 pnpm build
-pnpm test          # e2e + examples, needs Chrome
+pnpm test          # e2e + examples
+pnpm check         # biome
 ```
+
+Node 26 or newer.
 
 Descended from [computed-styles-regression-test](https://github.com/Shinyaigeek/computed-styles-regression-test),
 which proved the idea and is superseded by this.
+
+## License
+
+[MIT](./LICENSE) © Shinyaigeek

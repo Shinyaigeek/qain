@@ -324,7 +324,7 @@ function summarise(change: Change): string {
     case 'attr':
       return `[${change.attribute}] ${change.before ?? '—'} → ${change.after ?? '—'}`
     case 'text':
-      return `text changed`
+      return 'text changed'
   }
 }
 

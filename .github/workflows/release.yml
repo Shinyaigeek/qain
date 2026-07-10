@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      # A release tag that disagrees with package.json publishes the wrong version
+      # under the right name, and npm has no undo.
+      - name: Tag matches the version of every published package
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          for pkg in core playwright cli; do
+            version=$(node -p "require('./packages/$pkg/package.json').version")
+            if [ "$TAG" != "v$version" ]; then
+              echo "::error::release tag $TAG does not match packages/$pkg version v$version"
+              exit 1
+            fi
+          done
+
+      - run: pnpm build
+      - run: pnpm browsers --with-deps
+      - run: pnpm test
+      - run: pnpm demo
+
+      # -r skips the private packages (root, e2e, examples) on its own.
+      # `access: public` for the scoped packages comes from their publishConfig.
+      - run: pnpm publish -r --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
