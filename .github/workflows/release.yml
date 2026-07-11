@@ -27,7 +27,7 @@ jobs:
         env:
           TAG: ${{ github.event.release.tag_name }}
         run: |
-          for pkg in core playwright cli; do
+          for pkg in core playwright vitest storybook cli; do
             version=$(node -p "require('./packages/$pkg/package.json').version")
             if [ "$TAG" != "v$version" ]; then
               echo "::error::release tag $TAG does not match packages/$pkg version v$version"

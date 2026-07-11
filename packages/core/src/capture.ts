@@ -54,6 +54,15 @@ export interface CaptureOptions {
    * which is what `qain view` needs to rebuild the page without re-running layout.
    */
   replay?: boolean
+  /**
+   * Snapshot the frame whose document URL equals this, rather than the top-level
+   * document. `DOMSnapshot.captureSnapshot` returns one entry per frame, so a page
+   * that mounts the thing under test inside an iframe — `@vitest/browser` runs every
+   * test in one — would otherwise be snapshotted as the host, not the component.
+   * With it set, qain pierces into that frame for node queries and pseudo-state
+   * forcing too.
+   */
+  frameUrl?: string
 }
 
 interface Parsed {
@@ -103,9 +112,24 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
   // is the whole reason for the call: forcePseudoState speaks nodeId, DOMSnapshot
   // speaks backendNodeId, and without the map every candidate would cost a
   // DOM.describeNode round-trip.
-  const { root } = await cdp.send('DOM.getDocument', { depth: -1 })
+  // Pierce iframe boundaries only when a frame is targeted: DOM.querySelector and
+  // CSS.forcePseudoState speak nodeId, and an iframe's nodes are only in this tree
+  // (and only reachable by nodeId) when the document was fetched with `pierce`.
+  const { root } = await cdp.send('DOM.getDocument', {
+    depth: -1,
+    ...(options.frameUrl !== undefined ? { pierce: true } : {}),
+  })
   const nodeIdToBackend = new Map<number, number>()
   collectNodeIds(root, nodeIdToBackend)
+
+  // Everything that queries by nodeId — the selector scope and the pseudo-state
+  // candidates — has to start from the targeted frame's document, not the top one:
+  // querySelector does not cross a frame boundary.
+  const queryRoot = options.frameUrl !== undefined ? findFrameRoot(root, options.frameUrl) : root
+  if (options.frameUrl !== undefined && queryRoot === undefined) {
+    throw new Error(`qain: no frame matched url ${JSON.stringify(options.frameUrl)}`)
+  }
+  const queryRootNodeId = (queryRoot ?? root).nodeId
 
   const axByBackendId = await fetchAxTree(cdp)
   const viewport = await fetchViewport(cdp)
@@ -120,7 +144,7 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
     })
 
   const scopeBackendId = options.selector
-    ? await resolveSelector(cdp, root.nodeId, options.selector, nodeIdToBackend)
+    ? await resolveSelector(cdp, queryRootNodeId, options.selector, nodeIdToBackend)
     : undefined
   if (options.selector && scopeBackendId === undefined) {
     throw new Error(`qain: no element matched selector ${JSON.stringify(options.selector)}`)
@@ -132,6 +156,7 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
     excluded,
     scopeBackendId,
     replay: !!options.replay,
+    ...(options.frameUrl !== undefined ? { frameUrl: options.frameUrl } : {}),
   }
   const defaultParsed = parse(await takeSnapshot(), parseOptions)
 
@@ -163,7 +188,7 @@ export async function capture(cdp: CdpSession, options: CaptureOptions = {}): Pr
   if (states.length > 0) {
     const candidates = await findCandidates(
       cdp,
-      root.nodeId,
+      queryRootNodeId,
       options.interactiveSelector ?? DEFAULT_INTERACTIVE_SELECTOR,
       defaultParsed,
       nodeIdToBackend,
@@ -379,6 +404,24 @@ function descendants(parsed: Parsed, root: number): number[] {
 // CDP helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Finds the document node for a given frame URL in a pierced DOM tree. An iframe
+ * element carries its `contentDocument` as a child node with its own `documentURL`
+ * and nodeId — that nodeId is what querySelector and forcePseudoState need.
+ */
+function findFrameRoot(node: any, url: string): any | undefined {
+  if (node.documentURL === url) return node
+  if (node.contentDocument) {
+    const hit = findFrameRoot(node.contentDocument, url)
+    if (hit) return hit
+  }
+  for (const child of node.children ?? []) {
+    const hit = findFrameRoot(child, url)
+    if (hit) return hit
+  }
+  return undefined
+}
+
 /** nodeId -> backendNodeId, over the whole document. */
 function collectNodeIds(node: any, out: Map<number, number>): void {
   if (typeof node.backendNodeId === 'number' && typeof node.nodeId === 'number') {
@@ -462,13 +505,24 @@ interface ParseOptions {
   excluded: Set<string>
   scopeBackendId: number | undefined
   replay: boolean
+  /** Parse this frame's document rather than the top one. See CaptureOptions.frameUrl. */
+  frameUrl?: string
 }
 
 function parse(snapshot: CaptureSnapshotResult, options: ParseOptions): Parsed {
   const { projection, ax, excluded: excludedAttributes, scopeBackendId } = options
   const strings = snapshot.strings
-  const document = snapshot.documents[0]
-  if (!document) throw new Error('qain: DOMSnapshot returned no documents')
+  const document =
+    options.frameUrl === undefined
+      ? snapshot.documents[0]
+      : snapshot.documents.find((d) => strings[d.documentURL] === options.frameUrl)
+  if (!document) {
+    throw new Error(
+      options.frameUrl === undefined
+        ? 'qain: DOMSnapshot returned no documents'
+        : `qain: the snapshot has no frame with url ${JSON.stringify(options.frameUrl)}`,
+    )
+  }
 
   const { nodes, layout } = document
   const runsByLayout = options.replay ? indexTextRuns(document, strings) : undefined

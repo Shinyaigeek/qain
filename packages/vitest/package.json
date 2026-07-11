@@ -1,0 +1,29 @@
+{
+  "name": "@qain/vitest",
+  "version": "0.1.0",
+  "description": "Vitest browser-mode matcher for qain style snapshots.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "files": ["dist", "LICENSE", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": { "@qain/core": "workspace:*" },
+  "peerDependencies": { "vitest": ">=4.0.0" },
+  "devDependencies": { "vitest": "^4.1.10" },
+  "keywords": ["vitest", "browser-mode", "visual-regression", "computed-styles", "qa", "chromium", "cdp"],
+  "author": "Shinyaigeek",
+  "license": "MIT",
+  "homepage": "https://github.com/Shinyaigeek/qain#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shinyaigeek/qain.git",
+    "directory": "packages/vitest"
+  },
+  "bugs": { "url": "https://github.com/Shinyaigeek/qain/issues" },
+  "engines": { "node": ">=22" },
+  "publishConfig": { "access": "public" }
+}

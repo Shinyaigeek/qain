@@ -29,8 +29,16 @@ both.
 ```sh
 pnpm add -D qain              # CLI
 pnpm add -D @qain/playwright  # Playwright matcher
+pnpm add -D @qain/vitest      # Vitest browser-mode matcher
+pnpm add -D @qain/storybook   # Storybook test-runner matcher
 pnpm add -D @qain/core        # library
 ```
+
+> **Not on npm yet.** To use it in another repo before the first release, run
+> `pnpm pack` in each package and install the tarballs. `pnpm pack` rewrites
+> `workspace:*` and `catalog:` to concrete versions, which a `file:` link to the
+> workspace does not — a bare `file:` install fails with
+> `ERR_PNPM_WORKSPACE_PKG_NOT_FOUND: "@qain/core@workspace:*"`.
 
 ## CLI — for humans and coding agents
 
@@ -59,6 +67,57 @@ test('home page styles', async ({ page }) => {
 Baselines live beside the test and honour `--update-snapshots` exactly as
 `toHaveScreenshot` does. On failure the matcher attaches an HTML diff to the
 Playwright report, so nobody has to install a viewer.
+
+## Vitest browser mode
+
+The natural home for component-level VRT is `@vitest/browser`, where each test
+already mounts one component in a real Chromium. `@qain/vitest` snapshots it there —
+no Storybook boot, parallel per test, provider and theme fidelity inherited from
+your `.storybook/preview` or test setup.
+
+```ts
+import { render } from 'vitest-browser-react'
+import { test } from 'vitest'
+import { expect } from '@qain/vitest'
+
+test('primary button', async () => {
+  render(<Button variant="primary">Pay</Button>)
+  await expect(document.body).toMatchStyleSnapshot({ states: ['hover', 'focus-visible'] })
+})
+```
+
+Vitest runs every test inside an iframe, so `@qain/core` grew a `frameUrl` capture
+option to target that frame; the matcher points it at `location.href` for you. The
+first run writes `__qain__/<test>.qain.json` beside the test and passes, following
+Vitest's snapshot convention rather than `toHaveScreenshot`'s. No config: baselines
+persist through Vitest's built-in browser file commands. See
+[`@qain/vitest`](./packages/vitest/README.md).
+
+## Storybook test runner
+
+Already have stories? Each one becomes a style test. The runner renders every story
+in a real Chromium and hands `postVisit` a Playwright page — qain takes a CDP session
+from it, exactly as the Playwright integration does.
+
+```ts
+// .storybook/test-runner.ts
+import { matchStyleSnapshot } from '@qain/storybook'
+
+export default {
+  async postVisit(page, context) {
+    await matchStyleSnapshot(page, context)
+  },
+}
+```
+
+Baselines land in `qain-snapshots/<story-id>.qain.json`. First run writes and passes;
+under `CI` a missing baseline fails, so an uncommitted one can't slip through. See
+[`@qain/storybook`](./packages/storybook/README.md).
+
+qain drives Chromium over CDP through whatever your Playwright config launches. The
+configs in `e2e/` and `examples/` default to the system **Chrome** channel; if your
+CI only ships Playwright's bundled Chromium, set `channel: 'chromium'` in your
+config (or, in those example configs, point `QAIN_CHROME_PATH` at a Chrome binary).
 
 ## Why it is quiet
 
@@ -199,6 +258,9 @@ A ratio that crosses a WCAG threshold is reported by name.
 - **Attribute across nodes.** A rule that stopped matching because a class changed
   shows up as a declaration appearing or disappearing, not as "you removed
   `.primary`".
+- **Map CSS-in-JS back to source.** emotion and chakra inject a runtime `<style>`,
+  so `--rules` attributes a change to that injected sheet — the `file:line` is real,
+  but it points at the generated CSS, not the `.tsx` recipe that emitted it.
 - **Cross-browser.** See above.
 
 ## Layout
@@ -208,6 +270,8 @@ A ratio that crosses a WCAG threshold is reported by name.
 | `@qain/core` | capture, projection, diff, reports. No Playwright dependency. |
 | `qain` | the CLI. |
 | `@qain/playwright` | fixture, `toMatchStyleSnapshot`, report attachment. |
+| `@qain/vitest` | `toMatchStyleSnapshot` for Vitest browser mode — component VRT with no Storybook boot. |
+| `@qain/storybook` | `matchStyleSnapshot` for the Storybook test runner — every story becomes a style test. |
 
 `@qain/core` asks only for `{ send(method, params) }`, so it works with
 Playwright, Puppeteer, or a raw CDP socket.
@@ -233,7 +297,7 @@ pnpm test          # e2e + examples
 pnpm check         # biome
 ```
 
-Node 26 or newer.
+Runtime: Node 22 or newer (`engines`). Development pins Node 26 via `.nvmrc`.
 
 Descended from [computed-styles-regression-test](https://github.com/Shinyaigeek/computed-styles-regression-test),
 which proved the idea and is superseded by this.
