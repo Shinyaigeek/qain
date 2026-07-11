@@ -21,6 +21,6 @@
     "directory": "packages/core"
   },
   "bugs": { "url": "https://github.com/Shinyaigeek/qain/issues" },
-  "engines": { "node": ">=26" },
+  "engines": { "node": ">=22" },
   "publishConfig": { "access": "public" }
 }

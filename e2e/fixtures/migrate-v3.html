@@ -1,0 +1,12 @@
+<!doctype html><meta charset=utf-8><title>migrate</title>
+<style>
+  body { margin: 0; font: 16px/1.5 system-ui, sans-serif; }
+  /* v3: the class is renamed to a recipe hash, and only padding actually moved.
+     display / box-sizing / align-items / justify-content keep the same values. */
+  .chakra-button--solid {
+    display: inline-flex; align-items: center; justify-content: center;
+    box-sizing: border-box; padding: 20px 16px;
+    color: rgb(255, 255, 255); background: rgb(37, 99, 235);
+  }
+</style>
+<button class="chakra-button--solid" data-testid="pay">Pay</button>

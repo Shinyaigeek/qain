@@ -35,7 +35,7 @@ async function recordBaseline(page: import('@playwright/test').Page) {
   await page.evaluate(() => document.fonts.ready)
   await expect(async () => {
     await expect(page).toMatchStyleSnapshot({ path: baseline, states: ['hover'], rules: true })
-  }).rejects.toThrow(/wrote a new style baseline/)
+  }).rejects.toThrow(/created a new style baseline/)
 }
 
 test('the unchanged page matches its baseline', async ({ page }) => {

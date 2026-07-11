@@ -18,7 +18,7 @@ test('writes a baseline on first run, then matches it', async ({ page }, testInf
     // First run: no baseline yet.
     await expect(async () => {
       await expect(page).toMatchStyleSnapshot({ path })
-    }).rejects.toThrow(/wrote a new style baseline/)
+    }).rejects.toThrow(/created a new style baseline/)
 
     const written = JSON.parse(await readFile(path, 'utf8'))
     expect(written.qain).toBe(FORMAT_VERSION)
@@ -72,7 +72,7 @@ test('attaches a replay when the snapshots were captured for it', async ({ page 
     await page.evaluate(() => document.fonts.ready)
     await expect(async () => {
       await expect(page).toMatchStyleSnapshot({ path, replay: true })
-    }).rejects.toThrow(/wrote a new style baseline/)
+    }).rejects.toThrow(/created a new style baseline/)
 
     await page.goto('/derived-shift.html')
     await page.evaluate(() => document.fonts.ready)

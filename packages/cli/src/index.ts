@@ -33,8 +33,9 @@ snap options
       --rules              also record matched CSS rules, so \`qain diff\` can name
                            the declaration behind each change (one CDP call/node)
       --ua-rules           include the user-agent stylesheet in --rules
-      --replay             record per-line text rectangles, so \`qain view\` can
-                           rebuild the page without re-running layout
+      --replay             record per-line text rectangles, so \`qain view\` and
+                           \`qain diff --replay\` can rebuild the page without
+                           re-running layout — pass it on both snapshots you diff
       --browser <path>     Chromium executable to use
       --headed             run with a visible window
 
@@ -43,6 +44,7 @@ diff options
       --json               emit the diff as JSON instead of text
       --omit-derived       drop changes that are only collateral movement
       --replay <file>      write a before/after replay you can fade between
+                           (capture both snapshots with \`snap --replay\` first)
       --no-color           plain text
       --tolerance <px>     sub-pixel box tolerance (default 0.5)
 

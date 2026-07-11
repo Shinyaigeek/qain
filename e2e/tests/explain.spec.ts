@@ -32,6 +32,28 @@ test('names the rule, the shorthand and the file:line behind a reflow', async ({
   expect(cause.after!.source!.line).toBe(3)
 })
 
+test('a renamed class does not list declarations whose value never changed', async ({ page }) => {
+  // A v2→v3 migration rewrites the winning selector and its source even for
+  // declarations that render identically. Only `padding` actually moved, so the
+  // one cause reported must be `padding` — not `display: inline-flex → inline-flex`
+  // and the rest of the box model coming along because their selector renamed.
+  const before = await snap(page, '/migrate-v2.html', { rules: true })
+  const after = await snap(page, '/migrate-v3.html', { rules: true })
+
+  const pay = diff(before, after).attributions.find((a) => a.key === '@pay')!
+  expect(pay.unattributed).toBe(false)
+
+  const properties = pay.causes.map((c) => c.property)
+  expect(properties).toEqual(['padding'])
+  expect(properties).not.toContain('display')
+  expect(properties).not.toContain('box-sizing')
+  expect(properties).not.toContain('align-items')
+
+  const padding = pay.causes[0]!
+  expect(padding.before!.selector).toBe('.css-1a2b3c')
+  expect(padding.after!.selector).toBe('.chakra-button--solid')
+})
+
 test('resolves the cascade rather than taking the last matched rule', async ({ page }) => {
   // Chromium orders matchedCSSRules by specificity, not by importance. `.winner`
   // sits *before* the more specific `#target` in that array, and an inline style is

@@ -23,5 +23,5 @@
     "directory": "packages/cli"
   },
   "bugs": { "url": "https://github.com/Shinyaigeek/qain/issues" },
-  "engines": { "node": ">=26" }
+  "engines": { "node": ">=22" }
 }

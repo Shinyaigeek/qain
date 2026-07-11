@@ -159,7 +159,12 @@ export function explain(
       const from = winner(beforeRules, property)
       const to = winner(afterRules, property)
       if (!from && !to) continue
-      if (from && to && same(from, to)) continue
+      // An unchanged value is never the cause of a change, so it does not belong in
+      // the suspect list. Comparing anything *but* the value would keep it: a v2→v3
+      // migration moves the winning rule's selector and source even when the value
+      // holds, which is exactly when `display: inline-flex → inline-flex` and
+      // `border: none → none` crowd out the one declaration that actually moved.
+      if (from && to && from.value === to.value) continue
       causes.push({ property, before: from, after: to })
     }
 
@@ -172,19 +177,6 @@ export function explain(
     })
   }
   return attributions
-}
-
-/**
- * Two winners are the same fact when they render the same and come from the same
- * place. A rule that moved down a stylesheet without changing its value is noise.
- */
-function same(a: Declaration, b: Declaration): boolean {
-  return (
-    a.value === b.value &&
-    a.important === b.important &&
-    a.selector === b.selector &&
-    a.inline === b.inline
-  )
 }
 
 /**

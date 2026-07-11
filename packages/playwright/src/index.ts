@@ -79,11 +79,13 @@ export const expect = baseExpect.extend({
       }
       await write(baselinePath, `${JSON.stringify(actual, null, 2)}\n`)
       // Matches how Playwright reports a freshly written screenshot baseline:
-      // the run does not silently pass.
+      // the run does not silently pass. Say so, so a first run does not read as a
+      // real regression.
       return {
         name: assertionName,
         pass: false,
-        message: () => `qain: wrote a new style baseline at ${baselinePath}`,
+        message: () =>
+          `qain: created a new style baseline at ${baselinePath}\nA first run fails by design, exactly like toHaveScreenshot — re-run to verify against it.`,
       }
     }
 
