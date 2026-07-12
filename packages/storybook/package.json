@@ -1,6 +1,6 @@
 {
   "name": "@qain/storybook",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "qain style snapshots for the Storybook test runner.",
   "type": "module",
   "main": "./dist/index.js",

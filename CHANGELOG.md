@@ -7,6 +7,8 @@ this monorepo are versioned together under
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-07-12
+
 ### Added
 
 - **`qain shot <before> <after>`** renders a snapshot pair as `before.png`,
@@ -47,5 +49,6 @@ Initial release. Packages: `@qain/cli` (the `qain` CLI), `@qain/core`, `@qain/pl
   matcher, and Storybook test-runner matcher.
 - GitHub Action for posting diff summaries as PR comments.
 
-[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/Shinyaigeek/qain/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/Shinyaigeek/qain/releases/tag/v0.0.2
