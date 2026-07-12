@@ -303,9 +303,6 @@ pnpm check         # biome
 
 Runtime: Node 22 or newer (`engines`). Development pins Node 26 via `.nvmrc`.
 
-Descended from [computed-styles-regression-test](https://github.com/Shinyaigeek/computed-styles-regression-test),
-which proved the idea and is superseded by this.
-
 ## License
 
 [MIT](./LICENSE) © Shinyaigeek
