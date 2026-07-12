@@ -1,6 +1,6 @@
 {
   "qain": 2,
-  "url": "http://localhost:5600/",
+  "url": "http://localhost:5600/?variant=regressed",
   "title": "Acme — Billing",
   "viewport": {
     "width": 1280,
@@ -135,7 +135,7 @@
             0,
             0,
             1280,
-            466
+            478
           ],
           "role": "none",
           "paintOrder": 1,
@@ -207,7 +207,7 @@
             0,
             0,
             1280,
-            466
+            478
           ],
           "parent": "html",
           "role": "none",
@@ -218,7 +218,7 @@
           "path": "html > body > header",
           "tag": "header",
           "attrs": {
-            "class": "bar css-a1b2c3"
+            "class": "bar css-9f8e7d"
           },
           "styles": {
             "font-family": "system-ui, sans-serif",
@@ -372,7 +372,7 @@
               "text": "Billing"
             }
           ],
-          "paintOrder": 3,
+          "paintOrder": 4,
           "stackingContext": true,
           "blendedBackground": "rgb(255, 255, 255)"
         },
@@ -428,7 +428,7 @@
             "overflow-x": "visible",
             "overflow-y": "visible",
             "visibility": "visible",
-            "z-index": "2",
+            "z-index": "0",
             "flex-direction": "row",
             "flex-wrap": "nowrap",
             "justify-content": "normal",
@@ -461,7 +461,7 @@
               "text": "Pro"
             }
           ],
-          "paintOrder": 4,
+          "paintOrder": 3,
           "stackingContext": true,
           "blendedBackground": "rgb(219, 234, 254)"
         },
@@ -533,7 +533,7 @@
             0,
             62,
             1280,
-            404
+            416
           ],
           "parent": "html/body",
           "role": "main",
@@ -544,7 +544,7 @@
           "path": "html > body > main > section[data-testid=usage-card]",
           "tag": "section",
           "attrs": {
-            "class": "card css-a1b2c3",
+            "class": "card css-9f8e7d",
             "data-testid": "usage-card"
           },
           "styles": {
@@ -808,18 +808,18 @@
             "text-align": "start",
             "text-transform": "none",
             "text-decoration-line": "none",
-            "text-decoration-color": "rgb(107, 114, 128)",
+            "text-decoration-color": "rgb(199, 203, 212)",
             "white-space": "normal",
             "word-break": "normal",
             "text-overflow": "clip",
-            "color": "rgb(107, 114, 128)",
+            "color": "rgb(199, 203, 212)",
             "background-color": "rgba(0, 0, 0, 0)",
             "background-image": "none",
             "opacity": "1",
-            "border-top-color": "rgb(107, 114, 128)",
-            "border-right-color": "rgb(107, 114, 128)",
-            "border-bottom-color": "rgb(107, 114, 128)",
-            "border-left-color": "rgb(107, 114, 128)",
+            "border-top-color": "rgb(199, 203, 212)",
+            "border-right-color": "rgb(199, 203, 212)",
+            "border-bottom-color": "rgb(199, 203, 212)",
+            "border-left-color": "rgb(199, 203, 212)",
             "border-top-width": "0px",
             "border-right-width": "0px",
             "border-bottom-width": "0px",
@@ -833,7 +833,7 @@
             "border-bottom-left-radius": "0px",
             "border-bottom-right-radius": "0px",
             "box-shadow": "none",
-            "outline-color": "rgb(107, 114, 128)",
+            "outline-color": "rgb(199, 203, 212)",
             "outline-width": "3px",
             "outline-style": "none",
             "display": "block",
@@ -883,7 +883,7 @@
           "path": "html > body > main > section[data-testid=invoice-card]",
           "tag": "section",
           "attrs": {
-            "class": "card css-a1b2c3",
+            "class": "card css-9f8e7d",
             "data-testid": "invoice-card"
           },
           "styles": {
@@ -1147,18 +1147,18 @@
             "text-align": "start",
             "text-transform": "none",
             "text-decoration-line": "none",
-            "text-decoration-color": "rgb(107, 114, 128)",
+            "text-decoration-color": "rgb(199, 203, 212)",
             "white-space": "normal",
             "word-break": "normal",
             "text-overflow": "clip",
-            "color": "rgb(107, 114, 128)",
+            "color": "rgb(199, 203, 212)",
             "background-color": "rgba(0, 0, 0, 0)",
             "background-image": "none",
             "opacity": "1",
-            "border-top-color": "rgb(107, 114, 128)",
-            "border-right-color": "rgb(107, 114, 128)",
-            "border-bottom-color": "rgb(107, 114, 128)",
-            "border-left-color": "rgb(107, 114, 128)",
+            "border-top-color": "rgb(199, 203, 212)",
+            "border-right-color": "rgb(199, 203, 212)",
+            "border-bottom-color": "rgb(199, 203, 212)",
+            "border-left-color": "rgb(199, 203, 212)",
             "border-top-width": "0px",
             "border-right-width": "0px",
             "border-bottom-width": "0px",
@@ -1172,7 +1172,7 @@
             "border-bottom-left-radius": "0px",
             "border-bottom-right-radius": "0px",
             "box-shadow": "none",
-            "outline-color": "rgb(107, 114, 128)",
+            "outline-color": "rgb(199, 203, 212)",
             "outline-width": "3px",
             "outline-style": "none",
             "display": "block",
@@ -1285,7 +1285,7 @@
             24,
             370,
             231.594,
-            31
+            43
           ],
           "parent": "html/body/main",
           "role": "none",
@@ -1360,7 +1360,7 @@
             24,
             370,
             83.125,
-            31
+            43
           ],
           "parent": "html/body/main/div",
           "role": "button",
@@ -1370,7 +1370,7 @@
             {
               "box": [
                 40,
-                378,
+                384,
                 51.125,
                 15
               ],
@@ -1449,7 +1449,7 @@
             119.125,
             370,
             136.469,
-            31
+            43
           ],
           "parent": "html/body/main/div",
           "role": "button",
@@ -1459,7 +1459,7 @@
             {
               "box": [
                 135.125,
-                378,
+                384,
                 104.469,
                 15
               ],
@@ -1487,18 +1487,18 @@
             "text-align": "start",
             "text-transform": "none",
             "text-decoration-line": "none",
-            "text-decoration-color": "rgb(107, 114, 128)",
+            "text-decoration-color": "rgb(199, 203, 212)",
             "white-space": "normal",
             "word-break": "normal",
             "text-overflow": "clip",
-            "color": "rgb(107, 114, 128)",
+            "color": "rgb(199, 203, 212)",
             "background-color": "rgba(0, 0, 0, 0)",
             "background-image": "none",
             "opacity": "1",
-            "border-top-color": "rgb(107, 114, 128)",
-            "border-right-color": "rgb(107, 114, 128)",
-            "border-bottom-color": "rgb(107, 114, 128)",
-            "border-left-color": "rgb(107, 114, 128)",
+            "border-top-color": "rgb(199, 203, 212)",
+            "border-right-color": "rgb(199, 203, 212)",
+            "border-bottom-color": "rgb(199, 203, 212)",
+            "border-left-color": "rgb(199, 203, 212)",
             "border-top-width": "0px",
             "border-right-width": "0px",
             "border-bottom-width": "0px",
@@ -1512,7 +1512,7 @@
             "border-bottom-left-radius": "0px",
             "border-bottom-right-radius": "0px",
             "box-shadow": "none",
-            "outline-color": "rgb(107, 114, 128)",
+            "outline-color": "rgb(199, 203, 212)",
             "outline-width": "3px",
             "outline-style": "none",
             "display": "block",
@@ -1536,7 +1536,7 @@
           },
           "box": [
             24,
-            421,
+            433,
             224.359,
             21
           ],
@@ -1547,7 +1547,7 @@
             {
               "box": [
                 24,
-                423,
+                435,
                 137.688,
                 16
               ],
@@ -1556,7 +1556,7 @@
             {
               "box": [
                 243.906,
-                423,
+                435,
                 4.453,
                 16
               ],
@@ -1632,7 +1632,7 @@
           },
           "box": [
             161.688,
-            423,
+            435,
             82.219,
             16
           ],
@@ -1644,7 +1644,7 @@
             {
               "box": [
                 161.688,
-                423,
+                435,
                 82.219,
                 16
               ],
@@ -3210,7 +3210,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 19,
               "column": 3
             },
@@ -3224,7 +3224,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 20,
               "column": 3
             },
@@ -3238,13 +3238,13 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 21,
               "column": 3
             },
             "order": 1,
             "property": "z-index",
-            "value": "2"
+            "value": "0"
           },
           {
             "important": false,
@@ -3252,7 +3252,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 22,
               "column": 3
             },
@@ -3267,7 +3267,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 22,
               "column": 3
             },
@@ -3282,7 +3282,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 22,
               "column": 3
             },
@@ -3297,7 +3297,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 22,
               "column": 3
             },
@@ -3312,7 +3312,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 23,
               "column": 3
             },
@@ -3327,7 +3327,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 23,
               "column": 3
             },
@@ -3342,7 +3342,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 23,
               "column": 3
             },
@@ -3357,7 +3357,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 23,
               "column": 3
             },
@@ -3372,7 +3372,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 24,
               "column": 3
             },
@@ -3387,7 +3387,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 24,
               "column": 3
             },
@@ -3402,7 +3402,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 24,
               "column": 3
             },
@@ -3417,7 +3417,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 24,
               "column": 3
             },
@@ -3432,7 +3432,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 24,
               "column": 3
             },
@@ -3447,7 +3447,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 24,
               "column": 3
             },
@@ -3462,7 +3462,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 24,
               "column": 3
             },
@@ -3477,7 +3477,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 24,
               "column": 3
             },
@@ -3492,7 +3492,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 24,
               "column": 3
             },
@@ -3507,7 +3507,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 25,
               "column": 3
             },
@@ -3521,7 +3521,7 @@
             "inline": false,
             "selector": ".badge",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 26,
               "column": 3
             },
@@ -3557,7 +3557,7 @@
             "source": null,
             "order": 1,
             "property": "z-index",
-            "value": "2"
+            "value": "0"
           },
           {
             "important": false,
@@ -5028,13 +5028,13 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 30,
               "column": 3
             },
             "order": 3,
             "property": "color",
-            "value": "rgb(107, 114, 128)"
+            "value": "rgb(199, 203, 212)"
           },
           {
             "important": false,
@@ -5042,7 +5042,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 31,
               "column": 3
             },
@@ -5056,7 +5056,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -5071,7 +5071,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -5086,7 +5086,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -5101,7 +5101,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -5118,7 +5118,7 @@
             "source": null,
             "order": 3,
             "property": "color",
-            "value": "rgb(107, 114, 128)"
+            "value": "rgb(199, 203, 212)"
           },
           {
             "important": false,
@@ -6201,13 +6201,13 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 30,
               "column": 3
             },
             "order": 3,
             "property": "color",
-            "value": "rgb(107, 114, 128)"
+            "value": "rgb(199, 203, 212)"
           },
           {
             "important": false,
@@ -6215,7 +6215,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 31,
               "column": 3
             },
@@ -6229,7 +6229,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -6244,7 +6244,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -6259,7 +6259,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -6274,7 +6274,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -6291,7 +6291,7 @@
             "source": null,
             "order": 3,
             "property": "color",
-            "value": "rgb(107, 114, 128)"
+            "value": "rgb(199, 203, 212)"
           },
           {
             "important": false,
@@ -6475,7 +6475,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6490,7 +6490,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6505,7 +6505,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6520,7 +6520,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6535,7 +6535,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6550,7 +6550,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6565,7 +6565,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6580,7 +6580,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6595,7 +6595,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6610,7 +6610,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6625,7 +6625,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6640,7 +6640,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6655,7 +6655,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6670,7 +6670,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6685,7 +6685,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6700,7 +6700,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6715,7 +6715,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -6730,7 +6730,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 3,
               "column": 3
             },
@@ -6745,7 +6745,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 3,
               "column": 3
             },
@@ -6760,7 +6760,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 3,
               "column": 3
             },
@@ -6775,7 +6775,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 3,
               "column": 3
             },
@@ -6790,14 +6790,14 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 4,
               "column": 3
             },
             "order": 5,
             "property": "padding-top",
-            "value": "8px",
-            "shorthand": "padding: 8px 16px"
+            "value": "14px",
+            "shorthand": "padding: 14px 16px"
           },
           {
             "important": false,
@@ -6805,14 +6805,14 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 4,
               "column": 3
             },
             "order": 5,
             "property": "padding-right",
             "value": "16px",
-            "shorthand": "padding: 8px 16px"
+            "shorthand": "padding: 14px 16px"
           },
           {
             "important": false,
@@ -6820,14 +6820,14 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 4,
               "column": 3
             },
             "order": 5,
             "property": "padding-bottom",
-            "value": "8px",
-            "shorthand": "padding: 8px 16px"
+            "value": "14px",
+            "shorthand": "padding: 14px 16px"
           },
           {
             "important": false,
@@ -6835,14 +6835,14 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 4,
               "column": 3
             },
             "order": 5,
             "property": "padding-left",
             "value": "16px",
-            "shorthand": "padding: 8px 16px"
+            "shorthand": "padding: 14px 16px"
           },
           {
             "important": false,
@@ -6850,7 +6850,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -6865,7 +6865,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -6880,7 +6880,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -6895,7 +6895,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -6910,7 +6910,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -6925,7 +6925,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -6940,7 +6940,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -6955,7 +6955,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -6970,7 +6970,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -6985,7 +6985,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 6,
               "column": 3
             },
@@ -7211,7 +7211,7 @@
             "source": null,
             "order": 5,
             "property": "padding-top",
-            "value": "8px"
+            "value": "14px"
           },
           {
             "important": false,
@@ -7231,7 +7231,7 @@
             "source": null,
             "order": 5,
             "property": "padding-bottom",
-            "value": "8px"
+            "value": "14px"
           },
           {
             "important": false,
@@ -7349,7 +7349,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 10,
               "column": 3
             },
@@ -7364,7 +7364,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 10,
               "column": 3
             },
@@ -7379,7 +7379,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 10,
               "column": 3
             },
@@ -7394,7 +7394,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 10,
               "column": 3
             },
@@ -7409,7 +7409,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 10,
               "column": 3
             },
@@ -7424,7 +7424,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 10,
               "column": 3
             },
@@ -7439,7 +7439,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 10,
               "column": 3
             },
@@ -7454,7 +7454,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 10,
               "column": 3
             },
@@ -7469,7 +7469,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 10,
               "column": 3
             },
@@ -7484,7 +7484,7 @@
             "inline": false,
             "selector": ".btn-primary",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 11,
               "column": 3
             },
@@ -7624,7 +7624,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7639,7 +7639,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7654,7 +7654,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7669,7 +7669,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7684,7 +7684,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7699,7 +7699,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7714,7 +7714,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7729,7 +7729,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7744,7 +7744,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7759,7 +7759,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7774,7 +7774,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7789,7 +7789,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7804,7 +7804,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7819,7 +7819,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7834,7 +7834,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7849,7 +7849,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7864,7 +7864,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 2,
               "column": 3
             },
@@ -7879,7 +7879,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 3,
               "column": 3
             },
@@ -7894,7 +7894,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 3,
               "column": 3
             },
@@ -7909,7 +7909,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 3,
               "column": 3
             },
@@ -7924,7 +7924,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 3,
               "column": 3
             },
@@ -7939,14 +7939,14 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 4,
               "column": 3
             },
             "order": 5,
             "property": "padding-top",
-            "value": "8px",
-            "shorthand": "padding: 8px 16px"
+            "value": "14px",
+            "shorthand": "padding: 14px 16px"
           },
           {
             "important": false,
@@ -7954,14 +7954,14 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 4,
               "column": 3
             },
             "order": 5,
             "property": "padding-right",
             "value": "16px",
-            "shorthand": "padding: 8px 16px"
+            "shorthand": "padding: 14px 16px"
           },
           {
             "important": false,
@@ -7969,14 +7969,14 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 4,
               "column": 3
             },
             "order": 5,
             "property": "padding-bottom",
-            "value": "8px",
-            "shorthand": "padding: 8px 16px"
+            "value": "14px",
+            "shorthand": "padding: 14px 16px"
           },
           {
             "important": false,
@@ -7984,14 +7984,14 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 4,
               "column": 3
             },
             "order": 5,
             "property": "padding-left",
             "value": "16px",
-            "shorthand": "padding: 8px 16px"
+            "shorthand": "padding: 14px 16px"
           },
           {
             "important": false,
@@ -7999,7 +7999,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -8014,7 +8014,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -8029,7 +8029,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -8044,7 +8044,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -8059,7 +8059,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -8074,7 +8074,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -8089,7 +8089,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -8104,7 +8104,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -8119,7 +8119,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 5,
               "column": 3
             },
@@ -8134,7 +8134,7 @@
             "inline": false,
             "selector": ".btn",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 6,
               "column": 3
             },
@@ -8360,7 +8360,7 @@
             "source": null,
             "order": 5,
             "property": "padding-top",
-            "value": "8px"
+            "value": "14px"
           },
           {
             "important": false,
@@ -8380,7 +8380,7 @@
             "source": null,
             "order": 5,
             "property": "padding-bottom",
-            "value": "8px"
+            "value": "14px"
           },
           {
             "important": false,
@@ -8524,13 +8524,13 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 30,
               "column": 3
             },
             "order": 3,
             "property": "color",
-            "value": "rgb(107, 114, 128)"
+            "value": "rgb(199, 203, 212)"
           },
           {
             "important": false,
@@ -8538,7 +8538,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 31,
               "column": 3
             },
@@ -8552,7 +8552,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -8567,7 +8567,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -8582,7 +8582,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -8597,7 +8597,7 @@
             "inline": false,
             "selector": ".muted",
             "source": {
-              "url": "http://localhost:5600/styles/theme.css",
+              "url": "http://localhost:5600/styles/theme.regressed.css",
               "line": 32,
               "column": 3
             },
@@ -8614,7 +8614,7 @@
             "source": null,
             "order": 3,
             "property": "color",
-            "value": "rgb(107, 114, 128)"
+            "value": "rgb(199, 203, 212)"
           },
           {
             "important": false,
