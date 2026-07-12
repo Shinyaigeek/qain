@@ -1,6 +1,6 @@
 {
   "name": "qain",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Semantic style-regression testing for the browser. CLI.",
   "type": "module",
   "bin": { "qain": "./dist/index.js" },
