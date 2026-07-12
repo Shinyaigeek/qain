@@ -1,0 +1,29 @@
+name: qain baselines
+
+# Dogfoods the qain-diff action: when a PR changes a committed *.qain.json
+# baseline, one sticky comment explains the semantic style diff; when a later
+# push reverts the change, the comment is deleted again.
+#
+# Deliberately NOT filtered with `on.pull_request.paths`: the cleanup half
+# (delete the comment once the baseline change is reverted) needs a run on the
+# push where the file is no longer part of the PR's diff. The action exits in
+# seconds when nothing matches.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+      - uses: ./.github/actions/qain-diff
+        with:
+          pattern: examples/baselines/*.qain.json
