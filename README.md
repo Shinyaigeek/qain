@@ -24,6 +24,11 @@ default state
 `CSS.forcePseudoState` have no Firefox or WebKit equivalent, and qain is built on
 both.
 
+This README is the design story. For usage — [getting started](./docs/getting-started.md),
+the [CLI reference](./docs/cli.md), [recipes](./docs/recipes.md), the
+[snapshot format](./docs/snapshot-format.md), and the
+[library API](./docs/library.md) — see [`docs/`](./docs/README.md).
+
 ## Install
 
 ```sh

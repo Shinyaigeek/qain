@@ -1,0 +1,35 @@
+# qain docs
+
+Usage documentation for [qain](../README.md) — semantic style-regression
+testing for Chromium.
+
+## Guides
+
+- **[Getting started](./getting-started.md)** — install, capture your first
+  snapshot, read your first diff.
+- **[CLI reference](./cli.md)** — every command and flag: `snap`, `diff`,
+  `view`, `shot`.
+- **[Recipes](./recipes.md)** — snapshot a dev server, scope to one element,
+  point at a Storybook story, extract computed styles as data, gate CI and
+  coding agents on the exit code.
+- **[Snapshot & diff format](./snapshot-format.md)** — what is inside the JSON
+  the CLI reads and writes.
+- **[Using @qain/core as a library](./library.md)** — capture and diff from
+  your own code, with Playwright, Puppeteer, or a raw CDP socket.
+
+## Test-runner integrations
+
+Each integration is documented in its package README:
+
+- [`@qain/playwright`](../packages/playwright/README.md) —
+  `toMatchStyleSnapshot` for Playwright tests.
+- [`@qain/vitest`](../packages/vitest/README.md) — the same matcher for Vitest
+  browser mode; component VRT without booting Storybook.
+- [`@qain/storybook`](../packages/storybook/README.md) — `matchStyleSnapshot`
+  for the Storybook test runner; every story becomes a style test.
+
+## Design
+
+The [main README](../README.md) covers the ideas: why the diff stays quiet,
+how rule attribution works, what replay does, and what qain deliberately does
+not do.
