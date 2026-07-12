@@ -17,8 +17,14 @@ const BASE = `http://localhost:${PORT}/`
 const REGRESSED = `${BASE}?variant=regressed`
 
 function qain(args) {
-  return new Promise((resolve) => {
-    const child = spawn('qain', args, { stdio: ['ignore', 'pipe', 'pipe'] })
+  return new Promise((resolve, reject) => {
+    // A qain that never exits must fail the demo, not hang it until the CI
+    // job's own timeout — and it must fail with whatever the child said so far.
+    const child = spawn('qain', args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: 180_000,
+      killSignal: 'SIGKILL',
+    })
     let stdout = ''
     let stderr = ''
     child.stdout.on('data', (chunk) => {
@@ -27,7 +33,18 @@ function qain(args) {
     child.stderr.on('data', (chunk) => {
       stderr += chunk
     })
-    child.on('close', (code) => resolve({ code, stdout, stderr }))
+    child.on('error', reject)
+    child.on('close', (code, signal) => {
+      if (signal) {
+        reject(
+          new Error(
+            `qain ${args[0]} killed by ${signal} after 180s\n--- stdout\n${stdout}\n--- stderr\n${stderr}`,
+          ),
+        )
+        return
+      }
+      resolve({ code, stdout, stderr })
+    })
   })
 }
 
