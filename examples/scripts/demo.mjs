@@ -7,10 +7,18 @@
  */
 import { spawn } from 'node:child_process'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { start } from '../app/server.mjs'
+
+// Resolve the CLI entry through the package rather than PATH: pnpm only creates
+// the `qain` bin shim when dist/index.js already exists at install time, and in
+// CI install runs before build, so the shim is silently missing there.
+const require = createRequire(import.meta.url)
+const cliManifest = require.resolve('qain/package.json')
+const cliBin = join(dirname(cliManifest), require('qain/package.json').bin.qain)
 
 const PORT = 5601
 const BASE = `http://localhost:${PORT}/`
@@ -20,7 +28,7 @@ function qain(args) {
   return new Promise((resolve, reject) => {
     // A qain that never exits must fail the demo, not hang it until the CI
     // job's own timeout — and it must fail with whatever the child said so far.
-    const child = spawn('qain', args, {
+    const child = spawn(process.execPath, [cliBin, ...args], {
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 180_000,
       killSignal: 'SIGKILL',
