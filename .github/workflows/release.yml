@@ -43,8 +43,6 @@ jobs:
 
       # -r skips the private packages (root, e2e, examples) on its own.
       # `access: public` for the scoped packages comes from their publishConfig.
-      # TODO: add --provenance back once the repository is public — npm only
-      # issues provenance attestations for public source repositories.
-      - run: pnpm publish -r --no-git-checks
+      - run: pnpm publish -r --provenance --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
