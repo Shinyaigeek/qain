@@ -3,8 +3,9 @@
 Watches the qain snapshot baselines committed in your repo. When a pull
 request changes one, the action diffs it against the merge-base version and
 posts **one sticky comment** with the semantic, rule-attributed style diff per
-baseline — updated in place on every push, and **deleted again when the diff
-disappears** (e.g. the baseline change is reverted).
+baseline — **before / after / diff screenshots embedded** — updated in place
+on every push, and **deleted again when the diff disappears** (e.g. the
+baseline change is reverted).
 
 You never tell it which files: it looks at what the PR actually changed and
 matches it against a glob.
@@ -16,8 +17,8 @@ on:
   pull_request:
 
 permissions:
-  contents: read
-  pull-requests: write
+  contents: write        # the screenshots are committed to an assets branch
+  pull-requests: write   # the sticky comment
 
 jobs:
   diff:
@@ -26,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - uses: Shinyaigeek/qain/.github/actions/qain-diff@v0.0.2
+      - uses: Shinyaigeek/qain/.github/actions/qain-diff@v0.0.3
         with:
           pattern: |
             **/__qain__/*.qain.json
@@ -45,13 +46,29 @@ action exits in seconds when nothing matches.
 ## What lands on the PR
 
 - One comment per `name`, holding a section per changed baseline: change
-  counts (primary / derived / contrast regressions) and the readable diff with
-  the CSS rule behind each change.
+  counts (primary / derived / contrast regressions), **before / after / diff
+  screenshots**, and the readable diff with the CSS rule behind each change.
+  The diff image fades the unchanged pixels to grey and paints every pixel
+  that differs in red.
 - New baselines and deleted baselines are listed as such; baseline files that
   changed with no semantic difference (formatting churn) get a footnote.
 - An interactive HTML report per changed baseline, uploaded as the
   `qain-report-<name>` artifact and linked from the comment.
 - When a later push leaves no matching changes, the comment is deleted.
+
+## Screenshots
+
+The renders come from qain's replay (`qain shot`), so they need baselines
+captured with `qain snap --replay`, a Chrome/Chromium on the runner (GitHub's
+`ubuntu-latest` ships one), and `contents: write` — the PNGs are committed to
+the `assets-branch` (default `qain-diff-assets`, created on first use) and
+embedded by immutable commit URL. Anything missing and the action degrades to
+the text-only comment with a note.
+
+GitHub's image proxy cannot read private repositories, so on a private repo
+the embedded images will not render for viewers — set `screenshots: false`
+there and use the artifact report instead. Delete the assets branch whenever
+you want to purge old images.
 
 ## Inputs
 
@@ -62,6 +79,8 @@ action exits in seconds when nothing matches.
 | `github-token` | `${{ github.token }}` | Needs `pull-requests: write` to manage the comment. |
 | `fail-on-diff` | `false` | Also fail the check while a baseline carries a semantic change. Off by default: a committed baseline update is usually intentional — the comment explains it rather than blocks it. |
 | `qain-cmd` | `npx --yes @qain/cli` | How to invoke the CLI (needs Node 22+); pin a version or point at a local build. |
+| `screenshots` | `true` | Embed before/after/diff renders (see above). |
+| `assets-branch` | `qain-diff-assets` | Branch the PNGs are committed to. |
 
 ## Outputs
 

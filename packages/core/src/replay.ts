@@ -32,6 +32,12 @@ export interface ReplayOptions {
   /** Outline these nodes, distinguishing causes from collateral. */
   changes?: Change[]
   title?: string
+  /**
+   * Emit only the reconstruction itself — no header bar, padding or shadow.
+   * This is what `qain shot` screenshots: two bare renders of the same page
+   * must differ only where the page does.
+   */
+  bare?: boolean
 }
 
 /** Element properties worth replaying. Typography is applied to the text runs. */
@@ -84,6 +90,20 @@ export function renderReplay(snapshot: Snapshot, options: ReplayOptions = {}): s
   const state = options.state ?? 'default'
   const stage = buildStage(snapshot, state, options.changes ?? [])
   const title = options.title ?? (snapshot.title || snapshot.url)
+
+  if (options.bare) {
+    return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>${esc(title)}</title>
+${snapshot.url ? `<base href="${esc(snapshot.url)}">` : ''}
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; background:#fff; }
+  .stage { position:relative; overflow:hidden; }
+  .stage .n, .stage .t { pointer-events:none; }
+</style></head>
+<body>${stage.html}</body></html>`
+  }
 
   const states = snapshot.states.map((s) => s.state)
   const counts = countChanges(options.changes ?? [])

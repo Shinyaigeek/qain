@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import {
   type CdpSession,
@@ -14,13 +15,14 @@ import {
   renderReplay,
   renderReplayDiff,
 } from '@qain/core'
-import { chromium } from 'playwright-core'
+import { type Page, chromium } from 'playwright-core'
 
 const USAGE = `qain — semantic style-regression testing
 
   qain snap <url> [options]         capture a snapshot
   qain diff <before> <after> [opts] compare two snapshots
   qain view <snapshot> [opts]       rebuild the page from a snapshot, as HTML
+  qain shot <before> <after> [opts] render before.png, after.png and diff.png
 
 snap options
   -o, --out <file>         write JSON here (default: stdout)
@@ -52,6 +54,12 @@ view options
   -o, --out <file>         write HTML here (default: stdout)
       --state <name>       which captured state to draw (default: default)
 
+shot options
+  -o, --out-dir <dir>      where to write the three PNGs (default: .)
+      --state <name>       which captured state to draw (default: default)
+      --browser <path>     Chromium executable to use
+                           (both snapshots need \`snap --replay\` data)
+
 Exit code is 1 when the diff is non-empty, so CI and agents can gate on it.`
 
 async function main(argv: string[]): Promise<number> {
@@ -63,6 +71,7 @@ async function main(argv: string[]): Promise<number> {
   if (command === 'snap') return snap(argv.slice(1))
   if (command === 'diff') return compare(argv.slice(1))
   if (command === 'view') return view(argv.slice(1))
+  if (command === 'shot') return shot(argv.slice(1))
 
   process.stderr.write(`qain: unknown command '${command}'\n\n${USAGE}\n`)
   return 2
@@ -236,6 +245,136 @@ async function view(argv: string[]): Promise<number> {
 /** A snapshot captured without `--replay` rebuilds as boxes with no text in them. */
 function hasTextRuns(snapshot: Snapshot): boolean {
   return snapshot.states.some((state) => state.nodes.some((node) => node.textRuns !== undefined))
+}
+
+// ---------------------------------------------------------------------------
+
+async function shot(argv: string[]): Promise<number> {
+  const { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: {
+      'out-dir': { type: 'string', short: 'o', default: '.' },
+      state: { type: 'string', default: 'default' },
+      browser: { type: 'string' },
+    },
+  })
+
+  const [beforePath, afterPath] = positionals
+  if (!beforePath || !afterPath) {
+    process.stderr.write('qain shot: two snapshot files are required\n')
+    return 2
+  }
+
+  const before = await readSnapshot(beforePath)
+  const after = await readSnapshot(afterPath)
+  if (!hasTextRuns(before) || !hasTextRuns(after)) {
+    process.stderr.write(
+      'qain shot: a snapshot has no text rectangles; re-capture both with `qain snap --replay`\n',
+    )
+    return 2
+  }
+
+  const state = values.state as StateName
+  const dir = values['out-dir']!
+  const browser = await chromium.launch({
+    headless: true,
+    ...(values.browser ? { executablePath: values.browser } : {}),
+  })
+  try {
+    await mkdir(dir, { recursive: true })
+    const page = await browser.newPage({ viewport: before.viewport })
+
+    const render = async (snapshot: Snapshot): Promise<Buffer> => {
+      await page.setViewportSize(snapshot.viewport)
+      await page.setContent(renderReplay(snapshot, { state, bare: true }), { waitUntil: 'load' })
+      await page.evaluate(() => document.fonts.ready)
+      return page.screenshot({ fullPage: true })
+    }
+    const beforePng = await render(before)
+    const afterPng = await render(after)
+    const diffPng = await composeDiff(page, beforePng, afterPng)
+
+    for (const [file, png] of [
+      ['before.png', beforePng],
+      ['after.png', afterPng],
+      ['diff.png', diffPng],
+    ] as const) {
+      await writeFile(join(dir, file), png)
+    }
+    process.stderr.write(`qain: before.png, after.png, diff.png → ${dir}\n`)
+    return 0
+  } finally {
+    await browser.close()
+  }
+}
+
+/**
+ * Paint the pixel overlay: the base render faded to near-white, with every
+ * pixel that differs between the two screenshots in solid red. Composed in the
+ * already-running browser so the CLI needs no image library.
+ */
+async function composeDiff(page: Page, beforePng: Buffer, afterPng: Buffer): Promise<Buffer> {
+  await page.setContent('<canvas id="diff"></canvas>', { waitUntil: 'load' })
+  await page.evaluate(
+    async ([a, b]) => {
+      const load = async (src: string) => {
+        const img = new Image()
+        img.src = src
+        await img.decode()
+        return img
+      }
+      const [ia, ib] = await Promise.all([load(a), load(b)])
+      const width = Math.max(ia.naturalWidth, ib.naturalWidth)
+      const height = Math.max(ia.naturalHeight, ib.naturalHeight)
+
+      const pixels = (img: HTMLImageElement) => {
+        const c = document.createElement('canvas')
+        c.width = width
+        c.height = height
+        const ctx = c.getContext('2d')!
+        ctx.drawImage(img, 0, 0)
+        return ctx.getImageData(0, 0, width, height).data
+      }
+      const da = pixels(ia)
+      const db = pixels(ib)
+
+      const canvas = document.getElementById('diff') as HTMLCanvasElement
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')!
+      const out = ctx.createImageData(width, height)
+      for (let i = 0; i < da.length; i += 4) {
+        const delta = Math.max(
+          Math.abs(da[i]! - db[i]!),
+          Math.abs(da[i + 1]! - db[i + 1]!),
+          Math.abs(da[i + 2]! - db[i + 2]!),
+          Math.abs(da[i + 3]! - db[i + 3]!),
+        )
+        if (delta > 8) {
+          out.data[i] = 255
+          out.data[i + 1] = 32
+          out.data[i + 2] = 32
+          out.data[i + 3] = 255
+        } else {
+          // Unchanged: the base render, faded, so the red reads in context.
+          const grey = 0.299 * da[i]! + 0.587 * da[i + 1]! + 0.114 * da[i + 2]!
+          const faded = 255 - (255 - grey) * 0.25
+          out.data[i] = faded
+          out.data[i + 1] = faded
+          out.data[i + 2] = faded
+          out.data[i + 3] = 255
+        }
+      }
+      ctx.putImageData(out, 0, 0)
+    },
+    [toDataUrl(beforePng), toDataUrl(afterPng)] as const,
+  )
+  return page.locator('#diff').screenshot()
+}
+
+function toDataUrl(png: Buffer): string {
+  return `data:image/png;base64,${png.toString('base64')}`
 }
 
 // ---------------------------------------------------------------------------

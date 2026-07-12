@@ -11,8 +11,10 @@ name: qain baselines
 on:
   pull_request:
 
+# contents: write lets the action commit the before/after/diff screenshots to
+# the qain-diff-assets branch, where the comment embeds them from.
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -21,9 +23,15 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
+          cache: pnpm
+      # Dogfood the CLI at HEAD instead of the published package.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @qain/core --filter @qain/cli build
       - uses: ./.github/actions/qain-diff
         with:
           pattern: examples/baselines/*.qain.json
+          qain-cmd: node ${{ github.workspace }}/packages/cli/dist/index.js

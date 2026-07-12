@@ -3,7 +3,7 @@
 // version, and keep exactly one sticky comment in sync — created when a diff
 // appears, updated in place, deleted when the diff disappears.
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { buildComment, isReportable, markerFor } from './comment.mjs'
 
@@ -43,6 +43,84 @@ function qain(cmdWords, args, opts = {}) {
   return r
 }
 
+/** Renders need a browser; prefer what the runner already has. */
+function findChrome() {
+  if (process.env.CHROME_BIN) return process.env.CHROME_BIN
+  for (const name of ['google-chrome', 'google-chrome-stable', 'chromium-browser', 'chromium']) {
+    const r = spawnSync('which', [name], { encoding: 'utf8' })
+    if (r.status === 0 && r.stdout.trim()) return r.stdout.trim()
+  }
+  return null
+}
+
+/** `--replay` capture data is what makes a snapshot renderable as pixels. */
+function hasReplayData(json) {
+  try {
+    const snapshot = JSON.parse(json)
+    return Boolean(snapshot.states?.some((s) => s.nodes?.some((n) => n.textRuns !== undefined)))
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Commit files to the assets branch and return the commit sha. A comment can
+ * only embed an image by URL, so the PNGs live on an orphan branch, referenced
+ * immutably by commit — raw.githubusercontent.com renders in comments for
+ * public repositories.
+ */
+async function pushAssets(github, { owner, repo }, branch, files, message) {
+  const blobs = await Promise.all(
+    files.map((f) =>
+      github.rest.git.createBlob({ owner, repo, content: f.base64, encoding: 'base64' }),
+    ),
+  )
+  const { data: tree } = await github.rest.git.createTree({
+    owner,
+    repo,
+    tree: files.map((f, i) => ({
+      path: f.path,
+      mode: '100644',
+      type: 'blob',
+      sha: blobs[i].data.sha,
+    })),
+  })
+
+  for (let attempt = 0; ; attempt++) {
+    let headSha = null
+    try {
+      const { data } = await github.rest.git.getRef({ owner, repo, ref: `heads/${branch}` })
+      headSha = data.object.sha
+    } catch (err) {
+      if (err.status !== 404) throw err
+    }
+    const { data: commit } = await github.rest.git.createCommit({
+      owner,
+      repo,
+      message,
+      tree: tree.sha,
+      parents: headSha ? [headSha] : [],
+    })
+    try {
+      if (headSha) {
+        await github.rest.git.updateRef({ owner, repo, ref: `heads/${branch}`, sha: commit.sha })
+      } else {
+        await github.rest.git.createRef({
+          owner,
+          repo,
+          ref: `refs/heads/${branch}`,
+          sha: commit.sha,
+        })
+      }
+      return commit.sha
+    } catch (err) {
+      // Another run moved the ref between read and write; re-read and retry once.
+      if (attempt === 0 && (err.status === 422 || err.status === 409)) continue
+      throw err
+    }
+  }
+}
+
 export async function run({ github, context, core }) {
   const patterns = (process.env.QAIN_PATTERN ?? '**/*.qain.json')
     .split('\n')
@@ -51,6 +129,8 @@ export async function run({ github, context, core }) {
     .map(globToRegExp)
   const name = process.env.QAIN_NAME || 'qain'
   const cmdWords = (process.env.QAIN_CMD || 'npx --yes @qain/cli').split(/\s+/)
+  const screenshots = (process.env.QAIN_SCREENSHOTS ?? 'true') !== 'false'
+  const assetsBranch = process.env.QAIN_ASSETS_BRANCH || 'qain-diff-assets'
   const workspace = process.env.GITHUB_WORKSPACE
   const reportDir = join(process.env.RUNNER_TEMP, 'qain-reports')
   const baseDir = join(process.env.RUNNER_TEMP, 'qain-bases')
@@ -135,12 +215,69 @@ export async function run({ github, context, core }) {
         if (total > 0) {
           entry.text = qain(cmdWords, ['diff', before, after, '--no-color']).stdout
           qain(cmdWords, ['diff', before, after, '--html', join(reportDir, `${slug}.html`)])
+
+          if (screenshots) {
+            if (
+              hasReplayData(readFileSync(before, 'utf8')) &&
+              hasReplayData(readFileSync(after, 'utf8'))
+            ) {
+              const shotDir = join(reportDir, `${slug}.shots`)
+              const chrome = findChrome()
+              const r = qain(cmdWords, [
+                'shot',
+                before,
+                after,
+                '-o',
+                shotDir,
+                ...(chrome ? ['--browser', chrome] : []),
+              ])
+              if (r.status === 0) entry.shotDir = shotDir
+              else core.warning(`qain shot failed for ${f.filename}: ${r.stderr || r.stdout}`)
+            } else {
+              entry.noReplay = true
+            }
+          }
         }
         entries.push(entry)
       } catch (err) {
         core.warning(`qain-diff: ${f.filename}: ${err.message}`)
         entries.push({ path: f.filename, status: 'error', error: err.message })
       }
+    }
+  }
+
+  // Embed the screenshots: one assets-branch commit for the whole run, each
+  // image referenced by that immutable commit sha.
+  const withShots = entries.filter((e) => e.shotDir)
+  if (withShots.length > 0) {
+    try {
+      const assets = []
+      for (const e of withShots) {
+        e.images = {}
+        for (const file of ['before.png', 'after.png', 'diff.png']) {
+          const path = `pr-${pr.number}/${e.path.replace(/[^A-Za-z0-9._-]+/g, '__')}/${file}`
+          assets.push({ path, base64: readFileSync(join(e.shotDir, file)).toString('base64') })
+          e.images[file.replace('.png', '')] = path
+        }
+      }
+      const sha = await pushAssets(
+        github,
+        { owner, repo },
+        assetsBranch,
+        assets,
+        `qain screenshots for #${pr.number} (${context.sha ?? pr.head.sha})`,
+      )
+      for (const e of withShots) {
+        for (const key of Object.keys(e.images)) {
+          e.images[key] =
+            `https://raw.githubusercontent.com/${owner}/${repo}/${sha}/${e.images[key]}`
+        }
+      }
+    } catch (err) {
+      core.warning(
+        `Could not push screenshots to '${assetsBranch}' (does the workflow grant contents: write?): ${err.message}`,
+      )
+      for (const e of withShots) e.images = undefined
     }
   }
 
@@ -152,7 +289,7 @@ export async function run({ github, context, core }) {
     total,
     report: hasReport,
     files: JSON.stringify(
-      entries.map(({ text, warnings, ...rest }) => rest), // keep the output small
+      entries.map(({ text, warnings, shotDir, images, ...rest }) => rest), // keep the output small
     ),
   })
 
