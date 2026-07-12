@@ -16,7 +16,7 @@ inputs:
     required: false
     default: qain
   github-token:
-    description: Token used to read PR files and manage the comment. Usually ${{ secrets.GITHUB_TOKEN }}.
+    description: Token used to read PR files and manage the comment (needs pull-requests write).
     required: false
     default: ${{ github.token }}
   fail-on-diff:
