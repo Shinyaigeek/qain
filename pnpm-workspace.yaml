@@ -7,7 +7,28 @@ catalog:
   playwright-core: ^1.61.1
   '@playwright/test': ^1.61.1
 
+# --- Supply-chain hardening -------------------------------------------------
+
+# Only these packages may run install/lifecycle scripts. Everything else is
+# blocked, so a compromised transitive dependency cannot execute code on
+# `pnpm install`.
 allowBuilds:
   '@biomejs/biome': true
   playwright-core: true
   '@playwright/test': true
+
+# Do not adopt a version until it has been on the registry for this many
+# minutes (7 days). A malicious release is usually yanked well within a week, so
+# the cooldown keeps it out of the lockfile in the first place. The committed
+# lockfile is resolved under this policy, so a fresh `pnpm install` reproduces
+# it without downgrades.
+minimumReleaseAge: 10080
+
+# Verify installed dependencies match the lockfile before running any script,
+# and warn on drift instead of silently running against a stale node_modules.
+verifyDepsBeforeRun: warn
+
+# `pnpm audit` configuration. Add advisory IDs here (with a comment and a link)
+# only to silence a reviewed, non-applicable finding.
+auditConfig:
+  ignoreGhsas: []

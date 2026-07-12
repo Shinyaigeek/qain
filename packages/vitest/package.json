@@ -13,7 +13,7 @@
   },
   "dependencies": { "@qain/core": "workspace:*" },
   "peerDependencies": { "vitest": ">=4.0.0" },
-  "devDependencies": { "vitest": "^4.1.10" },
+  "devDependencies": { "vitest": "^4.1.0" },
   "keywords": ["vitest", "browser-mode", "visual-regression", "computed-styles", "qa", "chromium", "cdp"],
   "author": "Shinyaigeek",
   "license": "MIT",
