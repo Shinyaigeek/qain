@@ -5,6 +5,7 @@
   "scripts": { "test": "playwright test" },
   "devDependencies": {
     "@playwright/test": "catalog:",
+    "@qain/cli": "workspace:*",
     "@qain/core": "workspace:*",
     "@qain/playwright": "workspace:*",
     "@qain/storybook": "workspace:*",

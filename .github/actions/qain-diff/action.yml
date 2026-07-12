@@ -30,6 +30,18 @@ inputs:
     description: How to invoke the CLI (needs Node 22+). Override to pin a version or point at a local build.
     required: false
     default: npx --yes @qain/cli
+  screenshots:
+    description: >-
+      Embed before/after/diff renders in the comment. Needs baselines captured
+      with `qain snap --replay`, a Chrome on the runner, and `contents: write`
+      (the images are committed to the assets branch). Degrades gracefully when
+      any of those are missing.
+    required: false
+    default: "true"
+  assets-branch:
+    description: Branch the screenshot PNGs are committed to. Created on first use; delete it to purge old images.
+    required: false
+    default: qain-diff-assets
 
 outputs:
   changed:
@@ -52,6 +64,8 @@ runs:
         QAIN_PATTERN: ${{ inputs.pattern }}
         QAIN_NAME: ${{ inputs.name }}
         QAIN_CMD: ${{ inputs.qain-cmd }}
+        QAIN_SCREENSHOTS: ${{ inputs.screenshots }}
+        QAIN_ASSETS_BRANCH: ${{ inputs.assets-branch }}
         QAIN_ACTION_PATH: ${{ github.action_path }}
       with:
         github-token: ${{ inputs.github-token }}

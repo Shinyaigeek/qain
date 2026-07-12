@@ -70,6 +70,21 @@ export function buildComment({ name = 'qain', runUrl = '', hasReport = false, en
       `#### \`${e.path}\`${renamed} — ${e.total} change${e.total === 1 ? '' : 's'}: ${e.primary} primary, ${e.total - e.primary} derived${contrastTail}`,
     )
     for (const w of e.warnings ?? []) out.push(`> ⚠️ ${w}`)
+    if (e.images) {
+      out.push('')
+      out.push('| before | after | diff |')
+      out.push('| --- | --- | --- |')
+      out.push(
+        `| ![before](${e.images.before}) | ![after](${e.images.after}) | ![diff](${e.images.diff}) |`,
+      )
+      out.push('')
+    } else if (e.noReplay) {
+      out.push('')
+      out.push(
+        '<sub>No screenshots — capture the baseline with `qain snap --replay` to embed before/after/diff renders.</sub>',
+      )
+      out.push('')
+    }
     out.push('<details><summary><b>What changed — and the rule behind it</b></summary>')
     out.push('')
     out.push('```')

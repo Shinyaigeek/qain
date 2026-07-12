@@ -7,6 +7,18 @@ this monorepo are versioned together under
 
 ## [Unreleased]
 
+### Added
+
+- **`qain shot <before> <after>`** renders a snapshot pair as `before.png`,
+  `after.png` and `diff.png` — the diff fades unchanged pixels to grey and
+  paints every differing pixel red. Snapshots need `snap --replay` data.
+- `renderReplay` gained a `bare` option: just the reconstruction, no viewer
+  chrome — two bare renders differ only where the page does.
+- **The qain-diff action embeds screenshots.** Before/after/diff renders are
+  committed to an assets branch and embedded in the sticky comment
+  (`screenshots`/`assets-branch` inputs; needs `contents: write` and
+  `--replay` baselines; degrades to text when unavailable).
+
 ### Changed
 
 - **qain-diff action, reworked.** It no longer takes explicit `before`/`after`
