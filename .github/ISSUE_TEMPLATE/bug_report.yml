@@ -1,0 +1,39 @@
+name: Bug report
+description: Something qain does wrong — a bad diff, a crash, a wrong attribution.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. A repro — a minimal HTML page or a failing
+        snapshot — is worth far more than a description.
+  - type: input
+    id: package
+    attributes:
+      label: Package & version
+      description: Which package, and what version? (e.g. `qain@0.1.0`, `@qain/playwright@0.1.0`)
+      placeholder: qain@0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Steps, and ideally a minimal page/snapshot or a link to a repo.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Output of `node --version`, `pnpm --version`, your OS, and the Chrome/Chromium version.
+    validations:
+      required: false

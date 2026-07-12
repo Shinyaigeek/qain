@@ -1,0 +1,40 @@
+version: 2
+updates:
+  # npm/pnpm dependencies across the workspace. Dependabot reads the root
+  # lockfile and understands the pnpm workspace, so one entry covers every
+  # package under packages/*, e2e, and examples.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    # Mirror the pnpm `minimumReleaseAge` (7 days): don't propose a version until
+    # it has aged on the registry, so Dependabot never opens a PR pinning a
+    # release the workspace policy would refuse to install.
+    cooldown:
+      default-days: 7
+    groups:
+      # One PR for dev-tooling bumps (biome, typescript, @types/*) instead of
+      # one per package — keeps the review surface small.
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      # Group patch/minor production bumps together too; majors stay separate
+      # so breaking changes get their own review.
+      production-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+
+  # GitHub Actions referenced in workflows and the local composite action.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
