@@ -1,8 +1,9 @@
 name: Pages
 
-# Regenerates the live demo (https://shinyaigeek.github.io/qain/) from
-# examples/: snap the billing page and its regressed variant, publish the
-# replay diff, the HTML report, the raw snapshots, and the shot PNGs.
+# Regenerates the live site (https://shinyaigeek.github.io/qain/): the demo —
+# snap the example billing page and its regressed variant, publish the replay
+# diff, the HTML report, the raw snapshots, the shot PNGs — plus docs/ rendered
+# to HTML under /docs/.
 
 on:
   push:
@@ -10,6 +11,8 @@ on:
     paths:
       - "examples/**"
       - "packages/**"
+      - "docs/**"
+      - "scripts/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -54,6 +57,9 @@ jobs:
 
           $qain shot site/before.json site/after.json -o site
           cp examples/demo/index.html site/index.html
+
+      - name: Render the docs
+        run: node scripts/build-docs.mjs site/docs
 
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
