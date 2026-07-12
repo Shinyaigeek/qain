@@ -361,6 +361,17 @@
           "role": "heading",
           "name": "Billing",
           "text": "Billing",
+          "textRuns": [
+            {
+              "box": [
+                24,
+                19,
+                71.234,
+                24
+              ],
+              "text": "Billing"
+            }
+          ],
           "paintOrder": 3,
           "stackingContext": true,
           "blendedBackground": "rgb(255, 255, 255)"
@@ -439,6 +450,17 @@
           "parent": "html/body/banner",
           "role": "none",
           "text": "Pro",
+          "textRuns": [
+            {
+              "box": [
+                64,
+                24,
+                19.047,
+                14
+              ],
+              "text": "Pro"
+            }
+          ],
           "paintOrder": 4,
           "stackingContext": true,
           "blendedBackground": "rgb(219, 234, 254)"
@@ -666,6 +688,17 @@
           "role": "heading",
           "name": "Usage",
           "text": "Usage",
+          "textRuns": [
+            {
+              "box": [
+                41,
+                105,
+                48.672,
+                16
+              ],
+              "text": "Usage"
+            }
+          ],
           "paintOrder": 1,
           "blendedBackground": "rgb(255, 255, 255)"
         },
@@ -743,6 +776,17 @@
           "parent": "@usage-card",
           "role": "paragraph",
           "text": "18,204",
+          "textRuns": [
+            {
+              "box": [
+                41,
+                132,
+                108.063,
+                33
+              ],
+              "text": "18,204"
+            }
+          ],
           "paintOrder": 1,
           "blendedBackground": "rgb(255, 255, 255)"
         },
@@ -820,6 +864,17 @@
           "parent": "@usage-card",
           "role": "paragraph",
           "text": "requests this month",
+          "textRuns": [
+            {
+              "box": [
+                41,
+                176,
+                140.406,
+                16
+              ],
+              "text": "requests this month"
+            }
+          ],
           "paintOrder": 1,
           "blendedBackground": "rgb(255, 255, 255)"
         },
@@ -972,6 +1027,17 @@
           "role": "heading",
           "name": "Next invoice",
           "text": "Next invoice",
+          "textRuns": [
+            {
+              "box": [
+                41,
+                247,
+                97.922,
+                16
+              ],
+              "text": "Next invoice"
+            }
+          ],
           "paintOrder": 1,
           "blendedBackground": "rgb(255, 255, 255)"
         },
@@ -1049,6 +1115,17 @@
           "parent": "@invoice-card",
           "role": "paragraph",
           "text": "$142.00",
+          "textRuns": [
+            {
+              "box": [
+                41,
+                274,
+                127.531,
+                33
+              ],
+              "text": "$142.00"
+            }
+          ],
           "paintOrder": 1,
           "blendedBackground": "rgb(255, 255, 255)"
         },
@@ -1126,6 +1203,17 @@
           "parent": "@invoice-card",
           "role": "paragraph",
           "text": "charged on 1 August",
+          "textRuns": [
+            {
+              "box": [
+                41,
+                318,
+                145.75,
+                16
+              ],
+              "text": "charged on 1 August"
+            }
+          ],
           "paintOrder": 1,
           "blendedBackground": "rgb(255, 255, 255)"
         },
@@ -1278,6 +1366,17 @@
           "role": "button",
           "name": "Pay now",
           "text": "Pay now",
+          "textRuns": [
+            {
+              "box": [
+                40,
+                378,
+                51.125,
+                15
+              ],
+              "text": "Pay now"
+            }
+          ],
           "paintOrder": 1,
           "blendedBackground": "rgb(37, 99, 235)"
         },
@@ -1356,6 +1455,17 @@
           "role": "button",
           "name": "Download invoice",
           "text": "Download invoice",
+          "textRuns": [
+            {
+              "box": [
+                135.125,
+                378,
+                104.469,
+                15
+              ],
+              "text": "Download invoice"
+            }
+          ],
           "paintOrder": 1,
           "blendedBackground": "rgb(243, 244, 246)"
         },
@@ -1433,6 +1543,26 @@
           "parent": "html/body/main",
           "role": "sectionfooter",
           "text": "Prices exclude VAT. .",
+          "textRuns": [
+            {
+              "box": [
+                24,
+                423,
+                137.688,
+                16
+              ],
+              "text": "Prices exclude VAT. "
+            },
+            {
+              "box": [
+                243.906,
+                423,
+                4.453,
+                16
+              ],
+              "text": "."
+            }
+          ],
           "paintOrder": 1
         },
         {
@@ -1510,6 +1640,17 @@
           "role": "link",
           "name": "Terms apply",
           "text": "Terms apply",
+          "textRuns": [
+            {
+              "box": [
+                161.688,
+                423,
+                82.219,
+                16
+              ],
+              "text": "Terms apply"
+            }
+          ],
           "paintOrder": 1,
           "blendedBackground": "rgb(255, 255, 255)"
         }
