@@ -7,6 +7,15 @@ this monorepo are versioned together under
 
 ## [Unreleased]
 
+### Changed
+
+- **qain-diff action, reworked.** It no longer takes explicit `before`/`after`
+  paths: it detects the committed `*.qain.json` baselines a PR changes
+  (configurable `pattern` glob), diffs each against the merge base, posts one
+  sticky comment with a per-baseline semantic diff, updates it on every push,
+  and deletes it when the diff disappears. `fail-on-diff` now defaults to
+  `false`.
+
 ## [0.0.2] - 2026-07-12
 
 Initial release. Packages: `@qain/cli` (the `qain` CLI), `@qain/core`, `@qain/playwright`,

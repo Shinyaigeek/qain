@@ -1,126 +1,80 @@
 name: qain style diff
 description: >-
-  Diff two qain snapshots, post a sticky pull-request comment with the readable
-  diff, upload the interactive report, and fail the check when styles changed.
+  Detect qain snapshot baselines changed by a pull request, post one sticky
+  comment with the semantic style diff per baseline, keep it updated on every
+  push, and delete it when the diff disappears.
 
 inputs:
-  before:
-    description: Path to the base (committed) snapshot JSON.
-    required: true
-  after:
-    description: Path to the head (this PR) snapshot JSON.
-    required: true
+  pattern:
+    description: >-
+      Glob(s) selecting the committed snapshot files to watch, one per line.
+      Supports **, * and ?.
+    required: false
+    default: "**/*.qain.json"
   name:
-    description: Label for this diff, so several can coexist on one PR.
+    description: Label for this instance, so several can coexist on one PR.
     required: false
     default: qain
   github-token:
-    description: Token used to post the comment. Usually ${{ secrets.GITHUB_TOKEN }}.
+    description: Token used to read PR files and manage the comment (needs pull-requests write).
     required: false
     default: ${{ github.token }}
-  comment:
-    description: Post (and update) a sticky PR comment.
-    required: false
-    default: "true"
   fail-on-diff:
-    description: Fail the step — and the check — when the diff is non-empty.
+    description: >-
+      Also fail the check while any watched baseline carries a semantic change.
+      Off by default — a committed baseline update is usually intentional, and
+      the comment exists to explain it, not to block it.
     required: false
-    default: "true"
+    default: "false"
   qain-cmd:
-    description: How to invoke the CLI. Override to point at a local build.
+    description: How to invoke the CLI (needs Node 22+). Override to pin a version or point at a local build.
     required: false
     default: npx --yes @qain/cli
-  working-directory:
-    description: Directory the snapshot paths are relative to.
-    required: false
-    default: "."
 
 outputs:
   changed:
-    description: "'true' when the diff was non-empty."
-    value: ${{ steps.diff.outputs.changed }}
+    description: "'true' when at least one changed baseline carries a semantic diff."
+    value: ${{ steps.run.outputs.changed }}
   total:
-    description: Total number of changes.
-    value: ${{ steps.diff.outputs.total }}
+    description: Total number of semantic changes across all changed baselines.
+    value: ${{ steps.run.outputs.total }}
+  files:
+    description: "JSON array of the matched files: {path, status, total, primary, derived, contrast}."
+    value: ${{ steps.run.outputs.files }}
 
 runs:
   using: composite
   steps:
-    - name: qain diff
-      id: diff
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: |
-        set -o pipefail
-        set +e
-        ${{ inputs.qain-cmd }} diff "${{ inputs.before }}" "${{ inputs.after }}" --json > qain-diff.json
-        code=$?
-        set -e
-        if [ "$code" -ne 0 ] && [ "$code" -ne 1 ]; then
-          echo "::error::qain diff failed (exit $code)"
-          cat qain-diff.json || true
-          exit "$code"
-        fi
-        # Human-readable text and the standalone reports (replay is best-effort;
-        # it needs snapshots captured with --replay).
-        ${{ inputs.qain-cmd }} diff "${{ inputs.before }}" "${{ inputs.after }}" --no-color > qain-diff.txt 2>/dev/null || true
-        ${{ inputs.qain-cmd }} diff "${{ inputs.before }}" "${{ inputs.after }}" --html qain-report.html >/dev/null 2>&1 || true
-        ${{ inputs.qain-cmd }} diff "${{ inputs.before }}" "${{ inputs.after }}" --replay qain-replay.html >/dev/null 2>&1 || true
-        total=$(node -e "process.stdout.write(String((require('./qain-diff.json').summary||{}).total ?? 0))")
-        [ "$code" -eq 1 ] && echo "changed=true" >> "$GITHUB_OUTPUT" || echo "changed=false" >> "$GITHUB_OUTPUT"
-        echo "total=$total" >> "$GITHUB_OUTPUT"
-        echo "report=$( [ -f qain-report.html ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
-
-    - name: Upload report
-      if: ${{ steps.diff.outputs.changed == 'true' && steps.diff.outputs.report == 'true' }}
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-      with:
-        name: qain-report-${{ inputs.name }}
-        path: |
-          ${{ inputs.working-directory }}/qain-report.html
-          ${{ inputs.working-directory }}/qain-replay.html
-        if-no-files-found: ignore
-
-    - name: Build comment
-      if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: |
-        node "${{ github.action_path }}/format-comment.mjs" \
-          --json qain-diff.json \
-          --text qain-diff.txt \
-          --name "${{ inputs.name }}" \
-          --has-report "${{ steps.diff.outputs.report }}" \
-          --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-          > qain-comment.md
-
-    - name: Upsert sticky comment
-      if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}
+    - name: Diff changed baselines and sync the comment
+      id: run
       uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
       env:
-        QAIN_COMMENT_PATH: ${{ inputs.working-directory }}/qain-comment.md
-        QAIN_MARKER: "<!-- qain-report:${{ inputs.name }} -->"
+        QAIN_PATTERN: ${{ inputs.pattern }}
+        QAIN_NAME: ${{ inputs.name }}
+        QAIN_CMD: ${{ inputs.qain-cmd }}
+        QAIN_ACTION_PATH: ${{ github.action_path }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const fs = require('fs')
-          const body = fs.readFileSync(process.env.QAIN_COMMENT_PATH, 'utf8')
-          const marker = process.env.QAIN_MARKER
-          const { owner, repo } = context.repo
-          const issue_number = context.issue.number
-          const { data: comments } = await github.rest.issues.listComments({
-            owner, repo, issue_number, per_page: 100,
-          })
-          const mine = comments.find((c) => c.body && c.body.includes(marker))
-          if (mine) {
-            await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body })
-          } else {
-            await github.rest.issues.createComment({ owner, repo, issue_number, body })
-          }
+          const { pathToFileURL } = require('node:url')
+          const entry = pathToFileURL(process.env.QAIN_ACTION_PATH + '/main.mjs')
+          const { run } = await import(entry.href)
+          await run({ github, context, core })
+
+    - name: Upload HTML reports
+      if: ${{ steps.run.outputs.report == 'true' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: qain-report-${{ inputs.name }}
+        path: ${{ runner.temp }}/qain-reports/
+        retention-days: 14
+        if-no-files-found: ignore
 
     - name: Gate the check
-      if: ${{ inputs.fail-on-diff == 'true' && steps.diff.outputs.changed == 'true' }}
+      if: ${{ inputs.fail-on-diff == 'true' && steps.run.outputs.changed == 'true' }}
       shell: bash
+      env:
+        TOTAL: ${{ steps.run.outputs.total }}
       run: |
-        echo "::error::qain found ${{ steps.diff.outputs.total }} style change(s) versus the base."
+        echo "::error::qain found $TOTAL semantic style change(s) in this PR's baselines."
         exit 1
