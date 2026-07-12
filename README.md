@@ -34,6 +34,10 @@ pnpm add -D @qain/storybook   # Storybook test-runner matcher
 pnpm add -D @qain/core        # library
 ```
 
+Node 22+ or Bun: any npm-compatible package manager works, and the CLI and
+library run on the Bun runtime too (`bunx qain`, `bun --bun`) — CI exercises
+the full snap → diff → replay cycle under Bun.
+
 > **Not on npm yet.** To use it in another repo before the first release, run
 > `pnpm pack` in each package and install the tarballs. `pnpm pack` rewrites
 > `workspace:*` and `catalog:` to concrete versions, which a `file:` link to the
