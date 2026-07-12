@@ -1,6 +1,6 @@
 {
   "name": "@qain/vitest",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Vitest browser-mode matcher for qain style snapshots.",
   "type": "module",
   "main": "./dist/index.js",

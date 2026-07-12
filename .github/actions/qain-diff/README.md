@@ -28,7 +28,7 @@ jobs:
       - run: npx --yes @qain/cli snap http://localhost:4173 --rules --replay -o head.qain.json
 
       # `base.qain.json` is committed in the repo and refreshed on main.
-      - uses: Shinyaigeek/qain/.github/actions/qain-diff@v0.0.1
+      - uses: Shinyaigeek/qain/.github/actions/qain-diff@v0.0.2
         with:
           before: base.qain.json
           after: head.qain.json

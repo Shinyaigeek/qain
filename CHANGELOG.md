@@ -7,7 +7,7 @@ this monorepo are versioned together under
 
 ## [Unreleased]
 
-## [0.0.1] - 2026-07-12
+## [0.0.2] - 2026-07-12
 
 Initial release. Packages: `@qain/cli` (the `qain` CLI), `@qain/core`, `@qain/playwright`,
 `@qain/vitest`, `@qain/storybook`.
@@ -26,5 +26,5 @@ Initial release. Packages: `@qain/cli` (the `qain` CLI), `@qain/core`, `@qain/pl
   matcher, and Storybook test-runner matcher.
 - GitHub Action for posting diff summaries as PR comments.
 
-[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.1...HEAD
-[0.0.1]: https://github.com/Shinyaigeek/qain/releases/tag/v0.0.1
+[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/Shinyaigeek/qain/releases/tag/v0.0.2
