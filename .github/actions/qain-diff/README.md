@@ -25,7 +25,7 @@ jobs:
 
       # Build + serve this PR however you normally do, then snapshot it.
       - run: pnpm build && pnpm preview & npx wait-on http://localhost:4173
-      - run: npx qain snap http://localhost:4173 --rules --replay -o head.qain.json
+      - run: npx --yes @qain/cli snap http://localhost:4173 --rules --replay -o head.qain.json
 
       # `base.qain.json` is committed in the repo and refreshed on main.
       - uses: Shinyaigeek/qain/.github/actions/qain-diff@v0.0.1
@@ -45,7 +45,7 @@ jobs:
 | `github-token` | `${{ github.token }}` | Token used to comment. |
 | `comment` | `true` | Post and update a sticky PR comment. |
 | `fail-on-diff` | `true` | Fail the step — and the check — on any change. |
-| `qain-cmd` | `npx --yes qain` | How to invoke the CLI; point it at a local build if unpublished. |
+| `qain-cmd` | `npx --yes @qain/cli` | How to invoke the CLI; point it at a local build if unpublished. |
 | `working-directory` | `.` | Directory the snapshot paths are relative to. |
 
 ## Outputs

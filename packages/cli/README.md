@@ -4,7 +4,7 @@ The CLI for [qain](https://github.com/Shinyaigeek/qain) — style-regression
 testing that reports **what changed and what merely moved**.
 
 ```sh
-pnpm add -D qain
+pnpm add -D @qain/cli
 ```
 
 ```sh

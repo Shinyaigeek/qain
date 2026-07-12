@@ -9,7 +9,7 @@ this monorepo are versioned together under
 
 ## [0.0.1] - 2026-07-12
 
-Initial release. Packages: `qain` (CLI), `@qain/core`, `@qain/playwright`,
+Initial release. Packages: `@qain/cli` (the `qain` CLI), `@qain/core`, `@qain/playwright`,
 `@qain/vitest`, `@qain/storybook`.
 
 ### Added

@@ -17,8 +17,8 @@ import { start } from '../app/server.mjs'
 // the `qain` bin shim when dist/index.js already exists at install time, and in
 // CI install runs before build, so the shim is silently missing there.
 const require = createRequire(import.meta.url)
-const cliManifest = require.resolve('qain/package.json')
-const cliBin = join(dirname(cliManifest), require('qain/package.json').bin.qain)
+const cliManifest = require.resolve('@qain/cli/package.json')
+const cliBin = join(dirname(cliManifest), require('@qain/cli/package.json').bin.qain)
 
 const PORT = 5601
 const BASE = `http://localhost:${PORT}/`

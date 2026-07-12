@@ -29,7 +29,7 @@ inputs:
   qain-cmd:
     description: How to invoke the CLI. Override to point at a local build.
     required: false
-    default: npx --yes qain
+    default: npx --yes @qain/cli
   working-directory:
     description: Directory the snapshot paths are relative to.
     required: false

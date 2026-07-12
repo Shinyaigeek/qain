@@ -11,6 +11,6 @@
     "@playwright/test": "catalog:",
     "@qain/core": "workspace:*",
     "@qain/playwright": "workspace:*",
-    "qain": "workspace:*"
+    "@qain/cli": "workspace:*"
   }
 }

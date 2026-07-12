@@ -1,5 +1,5 @@
 {
-  "name": "qain",
+  "name": "@qain/cli",
   "version": "0.0.1",
   "description": "Semantic style-regression testing for the browser. CLI.",
   "type": "module",

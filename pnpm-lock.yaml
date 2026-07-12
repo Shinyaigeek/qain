@@ -50,15 +50,15 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.61.1
+      '@qain/cli':
+        specifier: workspace:*
+        version: link:../packages/cli
       '@qain/core':
         specifier: workspace:*
         version: link:../packages/core
       '@qain/playwright':
         specifier: workspace:*
         version: link:../packages/playwright
-      qain:
-        specifier: workspace:*
-        version: link:../packages/cli
 
   packages/cli:
     dependencies:

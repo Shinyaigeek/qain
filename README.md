@@ -27,7 +27,7 @@ both.
 ## Install
 
 ```sh
-pnpm add -D qain              # CLI
+pnpm add -D @qain/cli         # CLI (installs the `qain` binary)
 pnpm add -D @qain/playwright  # Playwright matcher
 pnpm add -D @qain/vitest      # Vitest browser-mode matcher
 pnpm add -D @qain/storybook   # Storybook test-runner matcher
@@ -35,7 +35,7 @@ pnpm add -D @qain/core        # library
 ```
 
 Node 22+ or Bun: any npm-compatible package manager works, and the CLI and
-library run on the Bun runtime too (`bunx qain`, `bun --bun`) — CI exercises
+library run on the Bun runtime too (`bunx @qain/cli`, `bun --bun`) — CI exercises
 the full snap → diff → replay cycle under Bun.
 
 ## CLI — for humans and coding agents
