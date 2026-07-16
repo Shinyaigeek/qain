@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { type Server, createServer } from 'node:http'
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import {
@@ -47,12 +48,18 @@ diff options
       --omit-derived       drop changes that are only collateral movement
       --replay <file>      write a before/after replay you can fade between
                            (capture both snapshots with \`snap --replay\` first)
+      --serve              host the view on localhost instead of writing a file;
+                           the before/after replay when both snapshots carry
+                           \`--replay\` data, otherwise the HTML report
+      --port <n>           port for --serve (default: first free from 4179)
       --no-color           plain text
       --tolerance <px>     sub-pixel box tolerance (default 0.5)
 
 view options
   -o, --out <file>         write HTML here (default: stdout)
       --state <name>       which captured state to draw (default: default)
+      --serve              host the rebuilt page on localhost instead of writing
+      --port <n>           port for --serve (default: first free from 4179)
 
 shot options
   -o, --out-dir <dir>      where to write the three PNGs (default: .)
@@ -162,6 +169,8 @@ async function compare(argv: string[]): Promise<number> {
     options: {
       html: { type: 'string' },
       replay: { type: 'string' },
+      serve: { type: 'boolean', default: false },
+      port: { type: 'string' },
       json: { type: 'boolean', default: false },
       'omit-derived': { type: 'boolean', default: false },
       // node:util's parseArgs has no --no-<flag> support, so the negation is the flag.
@@ -183,6 +192,20 @@ async function compare(argv: string[]): Promise<number> {
     omitDerived: values['omit-derived'],
     ...(values.tolerance ? { boxTolerance: Number(values.tolerance) } : {}),
   })
+
+  if (values.serve) {
+    // The replay is the richer view — zoom, pan, click a change to spotlight it —
+    // but it needs the text rectangles. Fall back to the HTML report without them.
+    const replayable = hasTextRuns(before) && hasTextRuns(after)
+    const html = replayable ? renderReplayDiff(before, after, result) : formatHtml(result)
+    if (!replayable) {
+      process.stderr.write(
+        'qain: no text rectangles — serving the HTML report. Re-capture both with\n' +
+          '      `qain snap --replay` for the before/after replay.\n',
+      )
+    }
+    return serve(html, parsePort(values.port), replayable ? 'the replay' : 'the diff report')
+  }
 
   if (values.html) await writeFile(values.html, formatHtml(result))
   if (values.replay) {
@@ -215,6 +238,8 @@ async function view(argv: string[]): Promise<number> {
     options: {
       out: { type: 'string', short: 'o' },
       state: { type: 'string', default: 'default' },
+      serve: { type: 'boolean', default: false },
+      port: { type: 'string' },
     },
   })
 
@@ -233,6 +258,7 @@ async function view(argv: string[]): Promise<number> {
   }
 
   const html = renderReplay(snapshot, { state: values.state as StateName })
+  if (values.serve) return serve(html, parsePort(values.port), 'the rebuilt page')
   if (values.out) {
     await writeFile(values.out, html)
     process.stderr.write(`qain: replay → ${values.out}\n`)
@@ -378,6 +404,65 @@ function toDataUrl(png: Buffer): string {
 }
 
 // ---------------------------------------------------------------------------
+
+const DEFAULT_PORT = 4179
+
+/**
+ * Host one page of HTML on localhost and stay up until Ctrl-C. Every path serves
+ * the same document, so a browser refresh always shows it. Returns a promise that
+ * never resolves — the server *is* the command from here on.
+ */
+async function serve(html: string, preferred: number, label: string): Promise<number> {
+  const body = Buffer.from(html)
+  const server = createServer((_request, response) => {
+    response.writeHead(200, {
+      'content-type': 'text/html; charset=utf-8',
+      'content-length': body.length,
+    })
+    response.end(body)
+  })
+
+  const port = await listen(server, preferred)
+  process.stderr.write(`qain: serving ${label} at http://localhost:${port}  —  Ctrl-C to stop\n`)
+  // Keep the event loop alive; main()'s .then(process.exit) never runs.
+  return new Promise<number>(() => {})
+}
+
+/** Listen on `preferred`, falling back to an OS-assigned port if it is taken. */
+async function listen(server: Server, preferred: number): Promise<number> {
+  const tryPort = (port: number) =>
+    new Promise<number>((resolve, reject) => {
+      const onError = (error: NodeJS.ErrnoException) => {
+        server.off('listening', onListening)
+        reject(error)
+      }
+      const onListening = () => {
+        server.off('error', onError)
+        const address = server.address()
+        resolve(typeof address === 'object' && address ? address.port : port)
+      }
+      server.once('error', onError)
+      server.once('listening', onListening)
+      server.listen(port, '127.0.0.1')
+    })
+
+  try {
+    return await tryPort(preferred)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EADDRINUSE' || preferred === 0) throw error
+    process.stderr.write(`qain: port ${preferred} is in use, picking a free one\n`)
+    return tryPort(0)
+  }
+}
+
+function parsePort(value: string | undefined): number {
+  if (value === undefined) return DEFAULT_PORT
+  const port = Number(value)
+  if (!Number.isInteger(port) || port < 0 || port > 65535) {
+    throw new Error(`qain: bad port ${JSON.stringify(value)}`)
+  }
+  return port
+}
 
 async function readSnapshot(path: string): Promise<Snapshot> {
   let parsed: unknown

@@ -116,6 +116,7 @@ ${snapshot.url ? `<base href="${esc(snapshot.url)}">` : ''}
       meta(snapshot.url),
       states.length > 1 ? stateSelect(states, state) : '',
       counts.total > 0 ? highlightToggle(counts) : '',
+      zoomControl(),
     ])}
     <div class="scroll"><div class="stages">${stage.html}</div></div>
     ${counts.total > 0 ? changeList(options.changes ?? []) : ''}`,
@@ -160,6 +161,7 @@ export function renderReplayDiff(
       </label>`,
       states.length > 1 ? stateSelect(states, state) : '',
       highlightToggle(counts),
+      zoomControl(),
     ])}
     <div class="scroll">
       <div class="stages" id="stages" style="--w:${width}px;--h:${height}px">
@@ -363,6 +365,14 @@ const highlightToggle = (counts: { primary: number; derived: number }) =>
      <i class="swatch d"></i>${counts.derived}
    </label>`
 
+const zoomControl = () =>
+  `<div class="zoom" role="group" aria-label="zoom">
+     <button type="button" data-zoom="out" title="zoom out (⌘/Ctrl + scroll)">−</button>
+     <output id="zoomLevel">100%</output>
+     <button type="button" data-zoom="in" title="zoom in (⌘/Ctrl + scroll)">+</button>
+     <button type="button" data-zoom="reset" title="reset zoom">reset</button>
+   </div>`
+
 function page(title: string, base: string, body: string, tail: string): string {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -385,7 +395,16 @@ ${base ? `<base href="${esc(base)}">` : ''}
   header label { display:flex; gap:.4rem; align-items:center; color:var(--dim); }
   .toggle .swatch { display:inline-block; width:.7em; height:.7em; border-radius:2px; margin:0 .2em 0 .5em; }
   .swatch.p { background:var(--primary); } .swatch.d { background:var(--derived); }
-  .scroll { overflow:auto; padding:1.5rem; }
+  .zoom { display:flex; align-items:center; gap:.15rem; }
+  .zoom button { font:12px ui-monospace, monospace; line-height:1; padding:.25rem .5rem;
+                 border:1px solid var(--line); border-radius:4px; background:var(--panel);
+                 color:var(--fg); cursor:pointer; }
+  .zoom button:hover { border-color:var(--primary); }
+  .zoom output { min-width:3.8ch; text-align:center; color:var(--dim);
+                 font:11px ui-monospace, monospace; }
+  /* Drag the canvas to pan; the boxes stay click-through so the drag lands here. */
+  .scroll { overflow:auto; padding:1.5rem; cursor:grab; }
+  .scroll.panning { cursor:grabbing; user-select:none; }
   .stages { display:flex; gap:1.5rem; align-items:flex-start; }
   .stages.overlay { display:grid; }
   .stages.overlay figure { grid-area:1/1; }
@@ -398,6 +417,13 @@ ${base ? `<base href="${esc(base)}">` : ''}
   /* Outlines sit outside the box so they never shift what they mark. */
   .hl .c-primary { outline:2px solid var(--primary); outline-offset:1px; }
   .hl .c-derived { outline:1px dashed var(--derived); }
+  /* Only the marked boxes take the pointer, so clicks select them and empty
+     space still drags. Must come after the pointer-events:none rule above. */
+  .hl .c-primary, .hl .c-derived { pointer-events:auto; cursor:pointer; }
+  /* A clicked change is spotlit: a double ring, lifted above everything. */
+  .stage .selected { outline:3px solid var(--primary) !important; outline-offset:2px !important;
+    box-shadow:0 0 0 3px var(--bg), 0 0 0 6px var(--primary), 0 6px 22px rgba(0,0,0,.45) !important;
+    z-index:2147483647 !important; }
   .flash { animation: flash .9s ease-out 2; }
   @keyframes flash { 0%,100% { outline-color:var(--primary) } 50% { outline-color:transparent } }
   aside { position:fixed; right:1rem; bottom:1rem; width:min(30rem, 42vw); max-height:40vh;
@@ -406,8 +432,10 @@ ${base ? `<base href="${esc(base)}">` : ''}
   aside h2 { font-size:.8rem; margin:0 0 .5rem; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); }
   aside h2 small { color:var(--fg); }
   aside ol { margin:0; padding-left:1.2rem; }
-  aside li { cursor:pointer; padding:.15rem 0; }
+  aside li { cursor:pointer; padding:.15rem .35rem; margin:0 -.35rem; border-radius:4px; }
   aside li:hover code { text-decoration:underline; }
+  aside li.active { background:color-mix(in srgb, var(--primary) 15%, transparent); }
+  aside li.active code, aside li.active span { color:var(--fg); }
   aside code { font:11px ui-monospace, monospace; color:var(--dim); display:block;
                overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   aside span { font-size:12px; }
@@ -419,19 +447,80 @@ ${base ? `<base href="${esc(base)}">` : ''}
 
 function script(hasModes: boolean): string {
   return `
+const scroll = document.querySelector('.scroll');
 const stages = document.querySelector('.stages');
 const highlight = document.getElementById('highlight');
 const apply = () => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('hl', !highlight || highlight.checked));
 highlight?.addEventListener('change', apply); apply();
 
-document.querySelectorAll('aside li').forEach(li => li.addEventListener('click', () => {
-  const key = li.dataset.jump;
+// Selection: click a change — in the canvas or the causes list — to spotlight it.
+// A second argument keeps the two directions from scrolling each other around.
+function select(key, fromList) {
+  document.querySelectorAll('.stage .selected').forEach(n => n.classList.remove('selected'));
+  document.querySelectorAll('aside li.active').forEach(li => li.classList.remove('active'));
+  if (!key) return;
   const targets = [...document.querySelectorAll('[data-qain-key]')].filter(n => n.dataset.qainKey === key);
+  targets.forEach(t => t.classList.add('selected'));
+  const li = [...document.querySelectorAll('aside li')].find(li => li.dataset.jump === key);
+  if (li) { li.classList.add('active'); if (fromList !== true) li.scrollIntoView({ block: 'nearest' }); }
   const last = targets[targets.length - 1];
   if (!last) return;
   last.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
   targets.forEach(t => { t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash'); });
+}
+document.querySelectorAll('aside li').forEach(li => li.addEventListener('click', () => select(li.dataset.jump, true)));
+window.addEventListener('keydown', e => { if (e.key === 'Escape') select(null); });
+
+// Zoom: the +/- buttons and ⌘/Ctrl + wheel, keeping the point under the cursor fixed.
+let zoom = 1;
+const zoomLabel = document.getElementById('zoomLevel');
+function setZoom(next, cx, cy) {
+  next = Math.min(5, Math.max(0.1, next));
+  const rect = scroll.getBoundingClientRect();
+  const px = cx == null ? rect.width / 2 : cx, py = cy == null ? rect.height / 2 : cy;
+  const ax = (scroll.scrollLeft + px) / zoom, ay = (scroll.scrollTop + py) / zoom;
+  zoom = next;
+  stages.style.zoom = zoom;
+  scroll.scrollLeft = ax * zoom - px;
+  scroll.scrollTop = ay * zoom - py;
+  if (zoomLabel) zoomLabel.textContent = Math.round(zoom * 100) + '%';
+}
+document.querySelectorAll('[data-zoom]').forEach(b => b.addEventListener('click', () => {
+  const a = b.dataset.zoom;
+  setZoom(a === 'reset' ? 1 : zoom * (a === 'in' ? 1.25 : 0.8));
 }));
+scroll.addEventListener('wheel', e => {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  e.preventDefault();
+  const rect = scroll.getBoundingClientRect();
+  setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - rect.left, e.clientY - rect.top);
+}, { passive: false });
+
+// Pan: drag the canvas. A press that never moves is a click — select the box
+// under it, or clear the selection when it lands on empty space.
+let pan = null;
+scroll.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  pan = { x: e.clientX, y: e.clientY, sl: scroll.scrollLeft, st: scroll.scrollTop, moved: false, target: e.target };
+});
+window.addEventListener('mousemove', e => {
+  if (!pan) return;
+  const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+  if (!pan.moved && Math.hypot(dx, dy) < 4) return;
+  pan.moved = true;
+  scroll.classList.add('panning');
+  scroll.scrollLeft = pan.sl - dx;
+  scroll.scrollTop = pan.st - dy;
+});
+window.addEventListener('mouseup', () => {
+  if (!pan) return;
+  const { moved, target } = pan;
+  pan = null;
+  scroll.classList.remove('panning');
+  if (moved) return;
+  const el = target instanceof Element ? target.closest('[data-qain-key]') : null;
+  select(el ? el.dataset.qainKey : null);
+});
 ${
   hasModes
     ? `
