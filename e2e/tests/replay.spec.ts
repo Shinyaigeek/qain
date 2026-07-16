@@ -180,6 +180,34 @@ test('a diff replay marks causes apart from collateral and lists them', async ({
   expect(Number(opacity)).toBeLessThan(1)
 })
 
+test('the diff view zooms and spotlights a change on click', async ({ page }) => {
+  const before = await snap(page, '/base.html', { replay: true })
+  const after = await snap(page, '/derived-shift.html', { replay: true })
+  const result = diff(before, after)
+  await openReplay(page, renderReplayDiff(before, after, result), dir)
+
+  // Zoom: the + button scales the canvas, reset returns it to 1.
+  await page.locator('[data-zoom="in"]').click()
+  const zoomed = await page.locator('.stages').evaluate((el) => Number(el.style.zoom))
+  expect(zoomed).toBeGreaterThan(1)
+  await page.locator('[data-zoom="reset"]').click()
+  expect(await page.locator('.stages').evaluate((el) => el.style.zoom)).toBe('1')
+
+  // Clicking a cause spotlights every box for that node and marks the row.
+  const first = page.locator('aside li').first()
+  const key = await first.getAttribute('data-jump')
+  await first.click()
+  await expect(first).toHaveClass(/active/)
+  const selected = await page
+    .locator('.stage .selected')
+    .evaluateAll((els) => [...new Set(els.map((el) => (el as HTMLElement).dataset.qainKey))])
+  expect(selected).toEqual([key])
+
+  // Escape clears the spotlight.
+  await page.keyboard.press('Escape')
+  expect(await page.locator('.stage .selected').count()).toBe(0)
+})
+
 test('a snapshot captured without replay still draws boxes, just no text', async ({ page }) => {
   const snapshot = await snap(page, '/base.html')
   expect(snapshot.states[0]!.nodes.every((n) => n.textRuns === undefined)).toBe(true)

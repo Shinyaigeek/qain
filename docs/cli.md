@@ -73,6 +73,8 @@ qain diff before.json after.json --replay report.html
 | `--json` | off | Emit the [diff as JSON](./snapshot-format.md#the-diff) instead of text. |
 | `--html <file>` | — | Also write a standalone HTML report. |
 | `--replay <file>` | — | Also write a before/after visual replay you can fade between. Requires both snapshots to carry `snap --replay` data; errors otherwise. |
+| `--serve` | off | Host the view on `localhost` instead of writing a file, and stay up until Ctrl-C. Serves the before/after replay when both snapshots carry `--replay` data, otherwise the HTML report. |
+| `--port <n>` | `4179` | Port for `--serve`. Falls back to a free port if this one is taken. |
 | `--tolerance <px>` | `0.5` | Sub-pixel box movement below this is not a change. Raise it if a font renders a fraction of a pixel differently across machines. |
 | `--no-color` | auto | Plain text. Color is on only when stdout is a TTY. |
 
@@ -89,15 +91,23 @@ Chromium gave it; nothing reflows.
 
 ```sh
 qain view page.json -o page.html
+qain view page.json --serve            # open it on localhost
 ```
 
 | option | default | what |
 | --- | --- | --- |
 | `-o, --out <file>` | stdout | Where to write the HTML. |
 | `--state <name>` | `default` | Which captured state to draw: `default` or one of the captured pseudo-states. |
+| `--serve` | off | Host the rebuilt page on `localhost` instead of writing it, and stay up until Ctrl-C. |
+| `--port <n>` | `4179` | Port for `--serve`. Falls back to a free port if this one is taken. |
 
 A snapshot captured without `--replay` still renders, but as boxes with no
 text placed in them — `view` warns when that is the case.
+
+The replay and `view` pages are interactive: **⌘/Ctrl + scroll** or the
+`− 100% +` control zooms the canvas, **drag** pans it, and **clicking a
+change** — in the canvas or the causes list — spotlights every box for that
+node (Esc clears it).
 
 ## `qain shot <before> <after>`
 
