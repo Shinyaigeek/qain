@@ -1,6 +1,6 @@
 {
   "name": "@qain/core",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Capture and semantically diff DOM + used values + layout boxes over CDP.",
   "type": "module",
   "main": "./dist/index.js",

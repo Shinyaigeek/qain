@@ -7,6 +7,31 @@ this monorepo are versioned together under
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-07-16
+
+### Added
+
+- **`view --serve` / `diff --serve`** host the rebuilt page on localhost instead
+  of writing a file, staying up until Ctrl-C (default port 4179, falling back to
+  the first free port; `--port` to override). `diff --serve` serves the
+  before/after replay when both snapshots carry `--replay` data, otherwise the
+  HTML report.
+- **The replay and `view` canvas zooms and pans.** ⌘/Ctrl + scroll or the
+  −/+/reset control zooms cursor-anchored; drag to pan. Zoom defaults to 1 via
+  CSS `zoom`, so the pixel-identity guarantee is untouched.
+- **Click a change to spotlight it.** Clicking a box in the canvas or a row in
+  the causes list rings every box for that node and marks the matching row, both
+  directions in sync; Esc or an empty-space click clears it.
+
+### Fixed
+
+- **Replay reproduces ancestor `overflow:hidden` and `opacity`.** Flattening the
+  DOM into siblings had dropped the effects a parent has on its whole subtree, so
+  a clipped child could spill past its container and a faded child render fully
+  opaque. Both are now rebuilt from the recorded parent chain — clipping as the
+  intersection of every clipping ancestor's box, opacity as the product down the
+  chain.
+
 ## [0.0.3] - 2026-07-12
 
 ### Added
@@ -49,6 +74,7 @@ Initial release. Packages: `@qain/cli` (the `qain` CLI), `@qain/core`, `@qain/pl
   matcher, and Storybook test-runner matcher.
 - GitHub Action for posting diff summaries as PR comments.
 
-[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/Shinyaigeek/qain/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/Shinyaigeek/qain/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/Shinyaigeek/qain/releases/tag/v0.0.2
