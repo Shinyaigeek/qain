@@ -17,16 +17,6 @@ import { type CdpSession, type Snapshot, capture, renderReplay } from '@qain/cor
  * still caught, and a future fix that closes the gap shows up as slack to reclaim.
  */
 
-async function snapContent(page: Page, body: string): Promise<Snapshot> {
-  await page.goto('/base.html')
-  await page.setContent(
-    `<!doctype html><meta charset=utf-8><style>body{margin:0;font:16px/1.5 system-ui,sans-serif;background:#fff}</style><div style="padding:16px;display:inline-block">${body}</div>`,
-  )
-  await page.evaluate(() => document.fonts.ready)
-  const cdp = (await page.context().newCDPSession(page)) as unknown as CdpSession
-  return capture(cdp, { replay: true })
-}
-
 async function snapPath(page: Page, path: string): Promise<Snapshot> {
   await page.goto(path)
   await page.evaluate(() => document.fonts.ready)
@@ -120,13 +110,13 @@ test('the bare replay of a static page matches the original within anti-alias no
   page,
   browser,
 }) => {
-  const snapshot = await snapPath(page, '/replay-fidelity.html')
+  const snapshot = await snapPath(page, '/fidelity/page.html')
   const ratio = await divergence(page, browser, dir, snapshot)
   expect(ratio, `${(ratio * 100).toFixed(2)}% of pixels differ`).toBeLessThan(0.01)
 })
 
 test('a child that overflows a clipping parent is cut, not left dangling', async ({ page }) => {
-  const snapshot = await snapPath(page, '/replay-fidelity.html')
+  const snapshot = await snapPath(page, '/fidelity/page.html')
   await writeFile(join(dir, 'replay.html'), renderReplay(snapshot, { bare: true }))
   await page.goto(`file://${join(dir, 'replay.html')}`)
 
@@ -144,7 +134,7 @@ test('a child that overflows a clipping parent is cut, not left dangling', async
 })
 
 test('a child under a faded ancestor is faded too', async ({ page }) => {
-  const snapshot = await snapPath(page, '/replay-fidelity.html')
+  const snapshot = await snapPath(page, '/fidelity/page.html')
   await writeFile(join(dir, 'replay.html'), renderReplay(snapshot, { bare: true }))
   await page.goto(`file://${join(dir, 'replay.html')}`)
 
@@ -162,80 +152,29 @@ test('a child under a faded ancestor is faded too', async ({ page }) => {
 // Constructs replay is meant to reproduce exactly. Each renders to within
 // anti-alias noise of the original — the reassuring half of the sweep.
 
-const FAITHFUL: { name: string; body: string }[] = [
-  {
-    name: 'flex row with gap',
-    body: `<div style="display:flex;gap:12px"><div style="width:60px;height:40px;background:#3b82f6"></div><div style="width:60px;height:40px;background:#22c55e"></div><div style="width:60px;height:40px;background:#ef4444"></div></div>`,
-  },
-  {
-    name: 'css grid',
-    body: `<div style="display:grid;grid-template-columns:80px 80px;gap:8px"><div style="height:40px;background:#3b82f6"></div><div style="height:40px;background:#22c55e"></div><div style="height:40px;background:#ef4444"></div><div style="height:40px;background:#eab308"></div></div>`,
-  },
-  {
-    name: 'absolute overlap honours paint order',
-    body: `<div style="position:relative;height:80px;width:90px"><div style="position:absolute;left:0;top:0;width:60px;height:60px;background:#3b82f6"></div><div style="position:absolute;left:30px;top:20px;width:60px;height:60px;background:#ef4444"></div></div>`,
-  },
-  {
-    name: 'negative margin overlap',
-    body: `<div style="width:80px;height:40px;background:#3b82f6"></div><div style="width:80px;height:40px;background:#ef4444;margin-top:-15px;margin-left:20px"></div>`,
-  },
-  {
-    name: 'paragraph wrapping onto many lines',
-    body: `<p style="width:180px;margin:0;color:#111">This paragraph is deliberately narrow so it wraps onto several lines of text.</p>`,
-  },
-  {
-    name: 'nested overflow clipping',
-    body: `<div style="width:120px;height:50px;overflow:hidden;background:#eee"><div style="width:200px;height:80px;overflow:hidden;background:#ddd"><div style="width:300px;height:120px;background:#3b82f6"></div></div></div>`,
-  },
-  {
-    name: 'inline-block baseline alignment',
-    body: `<div><span style="display:inline-block;width:40px;height:20px;background:#3b82f6"></span><span style="display:inline-block;width:40px;height:50px;background:#22c55e"></span><span style="display:inline-block;width:40px;height:30px;background:#ef4444"></span></div>`,
-  },
-  {
-    name: 'float with text flowing around it',
-    body: `<div style="width:200px"><div style="float:left;width:40px;height:40px;background:#3b82f6;margin-right:8px"></div><span style="color:#111">Text flowing to the right of a floated box, wrapping under it.</span></div>`,
-  },
-  {
-    name: 'semi-transparent layer composited over a colour',
-    body: `<div style="background:#0000ff;padding:16px"><div style="background:rgba(255,255,255,.5);color:#000;padding:8px">overlay text</div></div>`,
-  },
-  {
-    name: 'border-radius',
-    body: `<div style="width:80px;height:80px;background:#3b82f6;border-radius:20px"></div>`,
-  },
-  {
-    name: 'box-shadow',
-    body: `<div style="width:80px;height:40px;background:#fff;box-shadow:4px 4px 8px rgba(0,0,0,.4);margin:12px"></div>`,
-  },
-  {
-    name: 'full-size gradient',
-    body: `<div style="width:160px;height:60px;background-image:linear-gradient(90deg,#ef4444,#3b82f6)"></div>`,
-  },
-  {
-    name: 'text-decoration underline and strike',
-    body: `<div><span style="color:#111;text-decoration:underline">underlined</span> <span style="color:#111;text-decoration:line-through">struck</span></div>`,
-  },
-  {
-    name: 'uniform ancestor opacity',
-    body: `<div style="opacity:.5"><div style="width:80px;height:40px;background:#3b82f6"></div><div style="color:#111">faded text</div></div>`,
-  },
-  {
-    name: 'mix-blend-mode multiply',
-    body: `<div style="background:#ff0000;width:120px;height:60px;position:relative"><div style="position:absolute;left:20px;top:10px;width:80px;height:40px;background:#00ff00;mix-blend-mode:multiply"></div></div>`,
-  },
-  {
-    name: 'preformatted whitespace',
-    body: `<pre style="margin:0;color:#111;font:14px monospace">line one\n  indented\nline three</pre>`,
-  },
-  {
-    name: 'pseudo-element ::before content',
-    body: `<style>.pb::before{content:'\\2605 ';color:#eab308}</style><div class="pb" style="color:#111">starred</div>`,
-  },
+const FAITHFUL: { name: string; file: string }[] = [
+  { name: 'flex row with gap', file: 'flex-gap.html' },
+  { name: 'css grid', file: 'grid.html' },
+  { name: 'absolute overlap honours paint order', file: 'abs-overlap.html' },
+  { name: 'negative margin overlap', file: 'neg-margin.html' },
+  { name: 'paragraph wrapping onto many lines', file: 'wrap-paragraph.html' },
+  { name: 'nested overflow clipping', file: 'nested-clip.html' },
+  { name: 'inline-block baseline alignment', file: 'inline-block.html' },
+  { name: 'float with text flowing around it', file: 'float.html' },
+  { name: 'semi-transparent layer composited over a colour', file: 'rgba-stack.html' },
+  { name: 'border-radius', file: 'radius.html' },
+  { name: 'box-shadow', file: 'box-shadow.html' },
+  { name: 'full-size gradient', file: 'gradient.html' },
+  { name: 'text-decoration underline and strike', file: 'text-decoration.html' },
+  { name: 'uniform ancestor opacity', file: 'uniform-opacity.html' },
+  { name: 'mix-blend-mode multiply', file: 'mix-blend.html' },
+  { name: 'preformatted whitespace', file: 'pre.html' },
+  { name: 'pseudo-element ::before content', file: 'pseudo-before.html' },
 ]
 
-for (const { name, body } of FAITHFUL) {
+for (const { name, file } of FAITHFUL) {
   test(`faithful: ${name}`, async ({ page, browser }) => {
-    const snapshot = await snapContent(page, body)
+    const snapshot = await snapPath(page, `/fidelity/${file}`)
     const ratio = await divergence(page, browser, dir, snapshot)
     expect(ratio, `${(ratio * 100).toFixed(2)}% of pixels differ`).toBeLessThan(0.015)
   })
@@ -246,42 +185,42 @@ for (const { name, body } of FAITHFUL) {
 // budget above what they cost today, so a regression that widens the gap trips
 // and a fix that closes it leaves obvious slack.
 
-const LIMITS: { name: string; body: string; budget: number; why: string }[] = [
+const LIMITS: { name: string; file: string; budget: number; why: string }[] = [
   {
     name: 'rotation replays as its bounding box',
-    body: `<div style="width:80px;height:40px;background:#3b82f6;transform:rotate(20deg);margin:20px"></div>`,
+    file: 'rotate.html',
     budget: 0.25,
     why: 'bounds is axis-aligned; the rotation is not re-applied',
   },
   {
     name: 'positioned/sized gradient falls back to default',
-    body: `<div style="width:200px;height:60px;background-image:linear-gradient(90deg,#ef4444,#3b82f6);background-size:50% 100%;background-repeat:no-repeat"></div>`,
+    file: 'positioned-gradient.html',
     budget: 0.65,
     why: 'background-size/-position/-repeat are not projected',
   },
   {
     name: "faded ancestor's background tints a faded child",
-    body: `<div style="opacity:.3;background:green;padding:8px"><div style="background:yellow;color:#000;padding:4px">tinted</div></div>`,
+    file: 'opacity-tint.html',
     budget: 0.3,
     why: 'per-element opacity is not group compositing',
   },
   {
     name: 'text-shadow is dropped',
-    body: `<div style="color:#000;text-shadow:3px 3px 0 red;font-size:24px">shadowed</div>`,
+    file: 'text-shadow.html',
     budget: 0.15,
     why: 'text-shadow is not projected',
   },
   {
     name: 'text-overflow ellipsis is hard-clipped without the glyph',
-    body: `<div style="width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#111">this text is far too long to fit</div>`,
+    file: 'ellipsis.html',
     budget: 0.06,
     why: 'the run carries the full text; replay clips it rather than drawing the …',
   },
 ]
 
-for (const { name, body, budget, why } of LIMITS) {
+for (const { name, file, budget, why } of LIMITS) {
   test(`known limitation: ${name}`, async ({ page, browser }) => {
-    const snapshot = await snapContent(page, body)
+    const snapshot = await snapPath(page, `/fidelity/${file}`)
     const ratio = await divergence(page, browser, dir, snapshot)
     expect(ratio, `${(ratio * 100).toFixed(2)}% differ — ${why}`).toBeLessThan(budget)
   })
