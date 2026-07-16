@@ -1,0 +1,65 @@
+<!doctype html><meta charset=utf-8><title>replay fidelity</title>
+<!--
+  A plain, static page built only from things replay is meant to reproduce exactly:
+  boxes, borders, radii, backgrounds, text, and — the parts that flattening the tree
+  used to lose — a parent that clips its children and a parent that fades them. It is
+  the regression guard for replay/index.ts's "faithful reconstruction" promise.
+
+  It deliberately avoids the documented non-reproductions (positioned gradients,
+  text-shadow, parent filter, a faded ancestor whose own background tints a faded
+  child), so the rebuilt page must match the original to within anti-alias jitter.
+-->
+<style>
+  body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: rgb(245, 246, 248); color: rgb(20, 20, 20); }
+  .page { padding: 20px; display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+
+  /* A card that clips its content. The banner is wider than the card and would
+     spill to the right — the parent's overflow:hidden is the only thing holding
+     it in, and a flat replay has no parent to do that. Square-cornered: replay
+     clips with a rectangular inset, so a rounded clip would differ at the corners. */
+  .card { width: 260px; border: 1px solid rgb(210, 214, 220);
+          overflow: hidden; background: rgb(255, 255, 255); }
+  .banner { width: 460px; height: 64px; background: rgb(37, 99, 235); color: rgb(255, 255, 255);
+            padding: 20px; box-sizing: border-box; }
+  .card .body { padding: 12px 16px; }
+  .card h3 { margin: 0 0 4px; font-size: 15px; }
+  .card p { margin: 0; color: rgb(90, 96, 104); font-size: 13px; }
+
+  /* A disabled region. The wrapper has no background of its own, so folding its
+     opacity into each descendant is exactly what group opacity would paint. */
+  .disabled { opacity: 0.4; display: flex; gap: 10px; align-items: center; }
+  .disabled .btn { border: 0; border-radius: 6px; padding: 8px 16px;
+                   background: rgb(59, 130, 246); color: rgb(255, 255, 255); font-size: 14px; }
+  .disabled .hint { color: rgb(20, 20, 20); font-size: 13px; }
+
+  /* Single-line truncation: overflow:hidden clipping an inline run, not a block. */
+  .truncate { width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              border: 1px solid rgb(210, 214, 220); padding: 8px 12px;
+              background: rgb(255, 255, 255); }
+
+  .chips { display: flex; gap: 8px; }
+  .chip { border-radius: 999px; padding: 4px 12px; font-size: 12px;
+          background: rgb(224, 231, 255); color: rgb(30, 64, 175); }
+</style>
+<div class="page">
+  <div class="card">
+    <div class="banner">Release notes</div>
+    <div class="body">
+      <h3>Version 0.0.4</h3>
+      <p>Replay now rebuilds clipping and fades from the recorded parent chain.</p>
+    </div>
+  </div>
+
+  <div class="disabled">
+    <button class="btn">Save changes</button>
+    <span class="hint">Sign in to enable saving</span>
+  </div>
+
+  <div class="truncate">This line is longer than its box and must be cut with an ellipsis</div>
+
+  <div class="chips">
+    <span class="chip">clip</span>
+    <span class="chip">opacity</span>
+    <span class="chip">fidelity</span>
+  </div>
+</div>

@@ -14,12 +14,29 @@ import type { Box, Change, Diff, QainNode, Snapshot, StateName } from './types.j
  * the padding, already resolved. The same goes for margins, alignment, flex
  * distribution, and line breaking in wrapped paragraphs.
  *
+ * The one thing flattening the tree costs is the effects that a parent has on its
+ * whole subtree: an ancestor's `opacity` fades everything beneath it, an ancestor's
+ * `overflow:hidden` clips it. Siblings inherit neither. Both are rebuilt from the
+ * recorded `parent` chain — opacity as the product down the chain, clipping as the
+ * intersection of every clipping ancestor's box — see effectiveOpacity and clipRegion.
+ *
  * What it does not reproduce:
  *
  *   - **Rotations and skews.** `bounds` is post-transform but axis-aligned, so a
  *     rotated element replays as its bounding box. `transform` is recorded, but
  *     re-applying it would move the box twice.
- *   - **Anything qain did not project.** Gradients, backdrop filters, clip paths.
+ *   - **Anything qain did not project.** `background-size`/`-position`/`-repeat`,
+ *     `text-shadow`, backdrop filters, clip paths — a positioned gradient replays
+ *     at its default size, a text shadow not at all.
+ *   - **A parent `filter`** (blur, drop-shadow). Like opacity it acts on the whole
+ *     subtree, but unlike opacity there is no per-element value to fold down.
+ *   - **Rounded clipping corners.** A clipping ancestor is applied as a rectangular
+ *     inset, so a child clipped by a `border-radius`d parent keeps square corners.
+ *   - **Group opacity as true compositing.** Ancestor opacity is folded into each
+ *     element separately, which is exact until a *faded ancestor with its own
+ *     background* sits behind a *faded child* — then the background tints through,
+ *     where real group opacity would flatten the subtree first. Uniform fades and
+ *     transparent-backed children (the common cases) are unaffected.
  *   - **Text shaping the run boxes cannot capture.** Ligatures across a line break,
  *     bidi reordering within a run.
  *
@@ -40,11 +57,16 @@ export interface ReplayOptions {
   bare?: boolean
 }
 
-/** Element properties worth replaying. Typography is applied to the text runs. */
+/**
+ * Element properties worth replaying. Typography is applied to the text runs.
+ *
+ * `opacity` is deliberately absent: replay flattens the tree into siblings, so an
+ * element's own opacity is not enough — an ancestor's opacity must fade it too. It
+ * is applied separately, as the product down the whole chain (see boxHtml).
+ */
 const BOX_STYLES: readonly string[] = [
   'background-color',
   'background-image',
-  'opacity',
   'visibility',
   'mix-blend-mode',
   'filter',
@@ -184,6 +206,7 @@ interface Stage {
 
 function buildStage(snapshot: Snapshot, state: StateName, changes: Change[]): Stage {
   const nodes = nodesForState(snapshot, state)
+  const byKey = new Map(nodes.map((n) => [n.key, n]))
   const causeByKey = new Map<string, 'primary' | 'derived'>()
   for (const change of changes) {
     if (change.state !== state) continue
@@ -207,18 +230,21 @@ function buildStage(snapshot: Snapshot, state: StateName, changes: Change[]): St
       }
       continue
     }
+    // Clipping ancestors and ancestor opacity both come from the tree the flat
+    // stage threw away. Rebuild them from the recorded parent chain.
+    const clip = clipRegion(node, byKey)
     if (!node.box || node.box[2] <= 0 || node.box[3] <= 0) {
       // No layout box: display:none, or an element the renderer skipped. Still
       // draw its text runs if it somehow has them.
-      parts.push(...runsHtml(node, causeByKey.get(node.key)))
+      parts.push(...runsHtml(node, causeByKey.get(node.key), clip))
       continue
     }
 
     width = Math.max(width, node.box[0] + node.box[2])
     height = Math.max(height, node.box[1] + node.box[3])
 
-    parts.push(boxHtml(node, causeByKey.get(node.key)))
-    parts.push(...runsHtml(node, causeByKey.get(node.key)))
+    parts.push(boxHtml(node, causeByKey.get(node.key), effectiveOpacity(node, byKey), clip))
+    parts.push(...runsHtml(node, causeByKey.get(node.key), clip))
   }
 
   return {
@@ -243,7 +269,12 @@ function nodesForState(snapshot: Snapshot, state: StateName): QainNode[] {
   return base.map((node) => overrides.get(node.key) ?? node)
 }
 
-function boxHtml(node: QainNode, cause: 'primary' | 'derived' | undefined): string {
+function boxHtml(
+  node: QainNode,
+  cause: 'primary' | 'derived' | undefined,
+  opacity: number,
+  clip: ClipRegion | null,
+): string {
   const declarations: string[] = [
     'position:absolute',
     'box-sizing:border-box',
@@ -256,6 +287,10 @@ function boxHtml(node: QainNode, cause: 'primary' | 'derived' | undefined): stri
       declarations.push(`${property}:${value}`)
     }
   }
+  // Own opacity times every ancestor's — the flat stage has no tree to inherit it.
+  if (opacity < 1) declarations.push(`opacity:${round(opacity)}`)
+  const inset = clipInset(node.box!, clip)
+  if (inset) declarations.push(`clip-path:${inset}`)
 
   const attributes = [
     `class="n${cause ? ` c-${cause}` : ''}"`,
@@ -269,7 +304,11 @@ function boxHtml(node: QainNode, cause: 'primary' | 'derived' | undefined): stri
   return `<div ${attributes.join(' ')}></div>`
 }
 
-function runsHtml(node: QainNode, cause: 'primary' | 'derived' | undefined): string[] {
+function runsHtml(
+  node: QainNode,
+  cause: 'primary' | 'derived' | undefined,
+  clip: ClipRegion | null,
+): string[] {
   if (!node.textRuns) return []
 
   const shared: string[] = []
@@ -277,6 +316,8 @@ function runsHtml(node: QainNode, cause: 'primary' | 'derived' | undefined): str
     const value = node.styles[property]
     if (value && value !== 'none') shared.push(`${property}:${value}`)
   }
+  // textOpacity is already the accumulated opacity of the text's paint — it folds
+  // in every ancestor, so unlike the box it must not be multiplied again here.
   if (node.textOpacity !== undefined) shared.push(`opacity:${node.textOpacity}`)
 
   return node.textRuns.map((run) => {
@@ -291,12 +332,96 @@ function runsHtml(node: QainNode, cause: 'primary' | 'derived' | undefined): str
       `z-index:${(node.paintOrder ?? 0) * 2 + 1}`,
       ...shared,
     ]
+    const inset = clipInset(run.box, clip)
+    if (inset) declarations.push(`clip-path:${inset}`)
     return `<span class="t${cause ? ` c-${cause}` : ''}" data-qain-key="${esc(node.key)}" style="${esc(declarations.join(';'))}">${esc(run.text)}</span>`
   })
 }
 
 function rect(box: Box): string[] {
   return [`left:${box[0]}px`, `top:${box[1]}px`, `width:${box[2]}px`, `height:${box[3]}px`]
+}
+
+/**
+ * The stage is flat: every box is a sibling, so a parent's opacity and a parent's
+ * `overflow:hidden` — both of which act on a subtree — are gone. These two helpers
+ * put them back by walking the recorded `parent` chain.
+ */
+
+/** The product of this node's opacity and all its ancestors'. */
+function effectiveOpacity(node: QainNode, byKey: Map<string, QainNode>): number {
+  let opacity = 1
+  for (let cur: QainNode | undefined = node; cur; cur = ancestor(cur, byKey)) {
+    const value = cur.styles.opacity
+    if (value) {
+      const parsed = Number.parseFloat(value)
+      if (!Number.isNaN(parsed)) opacity *= parsed
+    }
+  }
+  return opacity
+}
+
+/** A clip rectangle in stage coordinates, or null when nothing above clips. */
+type ClipRegion = { minX: number; minY: number; maxX: number; maxY: number }
+
+// overflow other than `visible` clips the descendant flow. `scroll`/`auto` clip too;
+// the recorded boxes already sit at the scrolled position, so clipping to the
+// container's box reproduces exactly what was on screen when the snapshot was taken.
+const CLIPPING_OVERFLOW = new Set(['hidden', 'clip', 'scroll', 'auto'])
+
+function clipRegion(node: QainNode, byKey: Map<string, QainNode>): ClipRegion | null {
+  let region: ClipRegion | null = null
+  // Start from the parent: an element's own overflow clips its children, not itself.
+  for (let cur = ancestor(node, byKey); cur; cur = ancestor(cur, byKey)) {
+    if (!cur.box) continue
+    const [x, y, w, h] = cur.box
+    if (CLIPPING_OVERFLOW.has(cur.styles['overflow-x'] ?? '')) {
+      region ??= {
+        minX: Number.NEGATIVE_INFINITY,
+        minY: Number.NEGATIVE_INFINITY,
+        maxX: Number.POSITIVE_INFINITY,
+        maxY: Number.POSITIVE_INFINITY,
+      }
+      region.minX = Math.max(region.minX, x)
+      region.maxX = Math.min(region.maxX, x + w)
+    }
+    if (CLIPPING_OVERFLOW.has(cur.styles['overflow-y'] ?? '')) {
+      region ??= {
+        minX: Number.NEGATIVE_INFINITY,
+        minY: Number.NEGATIVE_INFINITY,
+        maxX: Number.POSITIVE_INFINITY,
+        maxY: Number.POSITIVE_INFINITY,
+      }
+      region.minY = Math.max(region.minY, y)
+      region.maxY = Math.min(region.maxY, y + h)
+    }
+  }
+  return region
+}
+
+/**
+ * `clip-path: inset()` for an element at `box`, so the clip region shows through
+ * and everything outside it is cut. Insets are relative to the element's own border
+ * box; an axis the region does not constrain stays at its infinite bound and clamps
+ * to a zero inset. Returns undefined when there is nothing to clip.
+ */
+function clipInset(box: Box, clip: ClipRegion | null): string | undefined {
+  if (!clip) return undefined
+  const [x, y, w, h] = box
+  const top = Math.max(0, clip.minY - y)
+  const left = Math.max(0, clip.minX - x)
+  const right = Math.max(0, x + w - clip.maxX)
+  const bottom = Math.max(0, y + h - clip.maxY)
+  if (top === 0 && left === 0 && right === 0 && bottom === 0) return undefined
+  return `inset(${round(top)}px ${round(right)}px ${round(bottom)}px ${round(left)}px)`
+}
+
+function ancestor(node: QainNode, byKey: Map<string, QainNode>): QainNode | undefined {
+  return node.parent ? byKey.get(node.parent) : undefined
+}
+
+function round(value: number): number {
+  return Math.round(value * 100) / 100
 }
 
 // ---------------------------------------------------------------------------
