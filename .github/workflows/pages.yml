@@ -2,8 +2,8 @@ name: Pages
 
 # Regenerates the live site (https://shinyaigeek.github.io/qain/): the demo —
 # snap the example billing page and its regressed variant, publish the replay
-# diff, the HTML report, the raw snapshots, the shot PNGs — plus docs/ rendered
-# to HTML under /docs/.
+# diff, the HTML report, the raw snapshots, the shot PNGs — plus the in-browser
+# playground under /playground/ and docs/ rendered to HTML under /docs/.
 
 on:
   push:
@@ -57,6 +57,9 @@ jobs:
 
           $qain shot site/before.json site/after.json -o site
           cp examples/demo/index.html site/index.html
+
+      - name: Assemble the browser playground
+        run: node scripts/build-playground.mjs site/playground
 
       - name: Render the docs
         run: node scripts/build-docs.mjs site/docs
