@@ -17,7 +17,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.10.0",
-    "marked": "^18.0.5",
+    "marked": "^18.0.6",
     "marked-gfm-heading-id": "^4.1.4",
     "typescript": "^5.7.0"
   }
