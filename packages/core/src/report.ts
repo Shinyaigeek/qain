@@ -1,6 +1,6 @@
 import { type Attribution, describeCause } from './explain.js'
 import { formatSource } from './rules.js'
-import { type Change, type Diff, changeId, isDerived } from './types.js'
+import { type Change, changeId, type Diff, isDerived } from './types.js'
 
 /**
  * Renders a diff for a terminal. Primary changes first — the whole reason qain

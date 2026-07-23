@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { type Page, expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 import { type CdpSession, capture } from '@qain/core'
 
 // The CLI entry, resolved through the package: the bin shim does not exist

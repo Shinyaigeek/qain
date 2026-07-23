@@ -1,14 +1,14 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { type Page, expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 import {
   type CdpSession,
-  type Snapshot,
   capture,
   diff,
   renderReplay,
   renderReplayDiff,
+  type Snapshot,
 } from '@qain/core'
 
 async function snap(page: Page, path: string, options = {}): Promise<Snapshot> {

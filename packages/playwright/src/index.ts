@@ -1,16 +1,16 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { type Page, test as base, expect as baseExpect } from '@playwright/test'
+import { test as base, expect as baseExpect, type Page } from '@playwright/test'
 import {
   type CaptureOptions,
   type CdpSession,
-  type DiffOptions,
-  type Snapshot,
   capture,
+  type DiffOptions,
   diff,
   formatHtml,
   formatText,
   renderReplayDiff,
+  type Snapshot,
 } from '@qain/core'
 
 export type { CaptureOptions, DiffOptions, Snapshot }

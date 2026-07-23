@@ -14,10 +14,10 @@ import {
   type Diff,
   type DiffSummary,
   FORMAT_VERSION,
+  isDerived,
   type QainNode,
   type Snapshot,
   type StateName,
-  isDerived,
 } from './types.js'
 
 export interface DiffOptions {

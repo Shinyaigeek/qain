@@ -34,8 +34,8 @@
  * page against itself consistently but would not match a CDP snapshot.
  */
 
-import { type Rgba, composite, parseColor } from './contrast.js'
-import { type IdentityInput, assignKeys, displayPath } from './identity.js'
+import { composite, parseColor, type Rgba } from './contrast.js'
+import { assignKeys, displayPath, type IdentityInput } from './identity.js'
 import {
   DEFAULT_EXCLUDED_ATTRIBUTES,
   DEFAULT_INTERACTIVE_SELECTOR,
@@ -78,7 +78,6 @@ export interface CaptureDomOptions {
   replay?: boolean
 }
 
-const ELEMENT_NODE = 1
 const TEXT_NODE = 3
 
 /** The dynamic pseudo-classes qain forces, longest first so the regex never splits `:focus-visible`. */
@@ -761,7 +760,6 @@ function parseBlock(
 
   while (i < n) {
     // Skip whitespace and comments to the start of a prelude.
-    const preludeStart = i
     let depthGuard = 0
     let prelude = ''
     while (i < n) {

@@ -5,8 +5,7 @@
  */
 import { readFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
-import { extname, join, normalize } from 'node:path'
-import { dirname } from 'node:path'
+import { dirname, extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = process.argv[2] ?? join(dirname(fileURLToPath(import.meta.url)), '..', 'site')

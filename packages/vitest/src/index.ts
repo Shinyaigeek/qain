@@ -1,11 +1,11 @@
 import {
   type CaptureOptions,
   type CdpSession,
-  type DiffOptions,
-  type Snapshot,
   capture,
+  type DiffOptions,
   diff,
   formatText,
+  type Snapshot,
 } from '@qain/core'
 import { expect } from 'vitest'
 import * as browserApi from 'vitest/browser'

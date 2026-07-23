@@ -1,8 +1,8 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { type Browser, type Page, expect, test } from '@playwright/test'
-import { type CdpSession, type Snapshot, capture, renderReplay } from '@qain/core'
+import { type Browser, expect, type Page, test } from '@playwright/test'
+import { type CdpSession, capture, renderReplay, type Snapshot } from '@qain/core'
 
 /**
  * Replay fidelity: the bare reconstruction must look like the page it was taken
