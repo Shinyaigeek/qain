@@ -10,7 +10,7 @@
  * light/dark toggle, and build-time syntax highlighting (a compact scanner for
  * the three languages the docs use — sh, ts, jsonc). No runtime framework.
  */
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { join, posix } from 'node:path'
 import { marked } from 'marked'
 import { gfmHeadingId } from 'marked-gfm-heading-id'

@@ -3,11 +3,11 @@ import { dirname } from 'node:path'
 import {
   type CaptureOptions,
   type CdpSession,
-  type DiffOptions,
-  type Snapshot,
   capture,
+  type DiffOptions,
   diff,
   formatText,
+  type Snapshot,
 } from '@qain/core'
 
 export type { CaptureOptions, DiffOptions, Snapshot }

@@ -3,19 +3,19 @@ import {
   type CaptureSnapshotResult,
   type CdpSession,
   type DocumentSnapshot,
-  type StyleSheetHeader,
   rare,
   rareBool,
+  type StyleSheetHeader,
   str,
 } from './cdp.js'
-import { type IdentityInput, assignKeys, displayPath } from './identity.js'
+import { assignKeys, displayPath, type IdentityInput } from './identity.js'
 import {
   DEFAULT_EXCLUDED_ATTRIBUTES,
   DEFAULT_INTERACTIVE_SELECTOR,
   DEFAULT_PROJECTION,
   NON_RENDERED_TAGS,
 } from './projection.js'
-import { type RuleIndex, captureRules } from './rules.js'
+import { captureRules, type RuleIndex } from './rules.js'
 import {
   type Box,
   type CapturedState,
@@ -707,7 +707,7 @@ function indexTextRuns(document: DocumentSnapshot, strings: string[]): Map<numbe
   for (let i = 0; i < boxes.layoutIndex.length; i++) {
     const li = boxes.layoutIndex[i]!
     const bounds = boxes.bounds[i]
-    if (!bounds || bounds.length !== 4) continue
+    if (bounds?.length !== 4) continue
     // A zero-area run is collapsed whitespace between tags. It renders nothing.
     if (bounds[2] === 0 || bounds[3] === 0) continue
 

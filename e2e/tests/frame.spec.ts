@@ -1,4 +1,4 @@
-import { type Page, expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 import { type CdpSession, capture } from '@qain/core'
 
 // `capture({ frameUrl })` snapshots a nested frame instead of the top document.

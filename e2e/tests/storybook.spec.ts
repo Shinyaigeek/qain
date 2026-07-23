@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { type Page, expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 import { matchStyleSnapshot } from '@qain/storybook'
 
 // The Storybook test runner hands `postVisit(page, context)` a Playwright page

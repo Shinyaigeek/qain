@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { type Server, createServer } from 'node:http'
+import { createServer, type Server } from 'node:http'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import {
   type CdpSession,
-  PSEUDO_STATES,
-  type PseudoState,
-  type Snapshot,
-  type StateName,
   capture,
   diff,
   formatHtml,
   formatText,
+  PSEUDO_STATES,
+  type PseudoState,
   renderReplay,
   renderReplayDiff,
+  type Snapshot,
+  type StateName,
 } from '@qain/core'
-import { type Page, chromium } from 'playwright-core'
+import { chromium, type Page } from 'playwright-core'
 
 const USAGE = `qain — semantic style-regression testing
 

@@ -1,5 +1,5 @@
-import { type Page, expect, test } from '@playwright/test'
-import { type CdpSession, type Snapshot, capture } from '@qain/core'
+import { expect, type Page, test } from '@playwright/test'
+import { type CdpSession, capture, type Snapshot } from '@qain/core'
 
 async function snap(page: Page, path: string, options = {}): Promise<Snapshot> {
   await page.goto(path)

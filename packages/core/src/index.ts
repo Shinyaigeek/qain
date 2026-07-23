@@ -1,5 +1,5 @@
-export { capture, type CaptureOptions } from './capture.js'
-export { captureDom, type CaptureDomOptions } from './capture-dom.js'
+export { type CaptureOptions, capture } from './capture.js'
+export { type CaptureDomOptions, captureDom } from './capture-dom.js'
 export type { CdpSession } from './cdp.js'
 export {
   composite,
@@ -8,17 +8,17 @@ export {
   crossedThreshold,
   isLargeText,
   parseColor,
+  type Rgba,
   relativeLuminance,
   THRESHOLDS,
-  type Rgba,
 } from './contrast.js'
-export { diff, type DiffOptions } from './diff.js'
+export { type DiffOptions, diff } from './diff.js'
 export {
   type Attribution,
   type DeclarationChange,
   describeCause,
-  explain,
   type ExplainOptions,
+  explain,
 } from './explain.js'
 export { absoluteKey, assignKeys, relativeKey } from './identity.js'
 export {
@@ -33,11 +33,11 @@ export {
   GEOMETRIC_PROPERTIES,
   NON_RENDERED_TAGS,
 } from './projection.js'
+export { type ReplayOptions, renderReplay, renderReplayDiff } from './replay.js'
 export { formatHtml, formatText } from './report.js'
-export { renderReplay, renderReplayDiff, type ReplayOptions } from './replay.js'
 export {
-  captureRules,
   type CaptureRulesOptions,
+  captureRules,
   type Declaration,
   formatSource,
   type Origin,
