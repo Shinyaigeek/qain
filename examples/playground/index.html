@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>qain playground — diff a page in the browser</title>
+<meta name="description" content="Edit a self-contained HTML page and see qain's semantic style diff — what changed and what merely moved — computed entirely in your browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'%3E%3Crect x='6' y='6' width='38' height='38' rx='10' fill='none' stroke='%238a94a6' stroke-width='5'/%3E%3Crect x='20' y='20' width='38' height='38' rx='10' fill='%234361ee'/%3E%3Crect x='20' y='20' width='24' height='24' rx='5' fill='%23e5484d'/%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: light dark;
+    --fg: #1a1a1a;
+    --bg: #ffffff;
+    --panel: #f6f7f9;
+    --border: rgba(127, 127, 127, 0.28);
+    --border-strong: rgba(127, 127, 127, 0.5);
+    --accent: #2563eb;
+    --muted: #6b7280;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --primary: #b91c1c;
+    --derived: #9ca3af;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: #e7e7e9; --bg: #16171a; --panel: #1e2024;
+      --accent: #7ea8ff; --muted: #9aa0ab; --primary: #f87171; --derived: #6b7280;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--fg); background: var(--bg);
+    font: 15px/1.55 system-ui, sans-serif;
+  }
+  a { color: var(--accent); }
+  header.site {
+    padding: 1.4rem clamp(1rem, 3vw, 2rem) 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  header.site h1 { font-size: 1.35rem; margin: 0 0 0.3rem; letter-spacing: -0.01em; }
+  header.site p { margin: 0; color: var(--muted); max-width: 60rem; font-size: 0.92rem; }
+  header.site nav { margin-top: 0.55rem; font-size: 0.85rem; }
+  header.site nav a { margin-right: 1.1rem; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.1rem;
+    padding: 0.7rem clamp(1rem, 3vw, 2rem);
+    border-bottom: 1px solid var(--border); background: var(--panel);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .toolbar label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.86rem; }
+  .toolbar .spacer { flex: 1; }
+  .toolbar button {
+    font: inherit; font-size: 0.85rem; padding: 0.3rem 0.7rem;
+    border: 1px solid var(--border-strong); border-radius: 6px;
+    background: var(--bg); color: var(--fg); cursor: pointer;
+  }
+  .toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+  .toolbar button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #status { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  main { padding: clamp(1rem, 3vw, 1.5rem); }
+  .editors { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 820px) { .editors { grid-template-columns: 1fr; } }
+  .pane { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .pane > h2 {
+    margin: 0; padding: 0.5rem 0.8rem; font-size: 0.8rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+    border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+  }
+  .pane textarea {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.5;
+    border: 0; resize: vertical; min-height: 260px; height: 300px; padding: 0.7rem 0.85rem;
+    background: var(--bg); color: var(--fg); tab-size: 2; white-space: pre; overflow: auto;
+  }
+  .pane textarea:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .preview-wrap { border-top: 1px solid var(--border); background: #fff; }
+  .preview-wrap iframe { width: 100%; height: 200px; border: 0; display: block; background: #fff; }
+  .preview-label { font-size: 0.72rem; color: var(--muted); padding: 0.25rem 0.8rem; background: var(--panel); border-top: 1px solid var(--border); }
+
+  section.result { margin-top: 1.25rem; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--panel); align-items: center; }
+  .tabs button {
+    font: inherit; font-size: 0.85rem; padding: 0.55rem 1rem; border: 0; background: transparent;
+    color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  .tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); font-weight: 600; }
+  .tabs .counts { margin-left: auto; padding-right: 0.9rem; font-size: 0.8rem; color: var(--muted); }
+  .tabs .counts b.primary { color: var(--primary); }
+  .tabs .counts b.derived { color: var(--derived); }
+  .tabpanel { display: none; }
+  .tabpanel.active { display: block; }
+  .tabpanel iframe { width: 100%; height: 620px; border: 0; display: block; background: var(--bg); }
+  pre.terminal {
+    margin: 0; padding: 1rem 1.1rem; overflow: auto; max-height: 620px;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.5;
+    background: #0f1115; color: #d7dae0;
+  }
+  pre.terminal .empty { color: #6b7280; }
+  .banner {
+    margin: 0; padding: 0.6rem 1.1rem; font-size: 0.85rem;
+    background: rgba(239, 68, 68, 0.12); color: var(--primary); border-bottom: 1px solid var(--border);
+    display: none; white-space: pre-wrap; font-family: var(--mono);
+  }
+  .banner.show { display: block; }
+  footer { padding: 2rem clamp(1rem, 3vw, 2rem); color: var(--muted); font-size: 0.85rem; }
+  noscript { display: block; padding: 2rem; color: var(--primary); }
+</style>
+</head>
+<body>
+<header class="site">
+  <h1>qain playground</h1>
+  <p>Edit either page. qain captures the browser's <em>used values</em> — resolved
+  computed styles, layout boxes, paint order, composited colours — from both, and
+  diffs them semantically: <strong>what changed, and what merely moved</strong>.
+  Every change is attributed to the CSS declaration behind it. All of it runs in
+  this tab — no server, no CDP.</p>
+  <nav>
+    <a href="../">live demo</a>
+    <a href="../docs/">docs</a>
+    <a href="https://github.com/Shinyaigeek/qain">GitHub</a>
+  </nav>
+</header>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="opt-hover" checked> capture <code>:hover</code></label>
+  <label><input type="checkbox" id="opt-derived"> omit derived</label>
+  <label><input type="checkbox" id="opt-auto" checked> live</label>
+  <button id="run" class="primary" type="button">Run diff ▶</button>
+  <span class="spacer"></span>
+  <span id="status">ready</span>
+  <button id="restore" type="button">Restore example</button>
+  <button id="identical" type="button">Make identical</button>
+</div>
+
+<noscript>The qain playground needs JavaScript — it runs the whole capture &amp; diff in your browser.</noscript>
+
+<main>
+  <div class="editors">
+    <div class="pane">
+      <h2>original <span style="text-transform:none;font-weight:400">before.html</span></h2>
+      <textarea id="src-before" spellcheck="false" aria-label="original HTML"></textarea>
+      <div class="preview-wrap"><iframe id="view-before" title="original preview" sandbox="allow-same-origin"></iframe></div>
+      <div class="preview-label">live preview</div>
+    </div>
+    <div class="pane">
+      <h2>edited <span style="text-transform:none;font-weight:400">after.html</span></h2>
+      <textarea id="src-after" spellcheck="false" aria-label="edited HTML"></textarea>
+      <div class="preview-wrap"><iframe id="view-after" title="edited preview" sandbox="allow-same-origin"></iframe></div>
+      <div class="preview-label">live preview</div>
+    </div>
+  </div>
+
+  <section class="result">
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="replay" aria-selected="true">Replay diff</button>
+      <button role="tab" data-tab="report" aria-selected="false">HTML report</button>
+      <button role="tab" data-tab="terminal" aria-selected="false">Terminal</button>
+      <span class="counts" id="counts"></span>
+    </div>
+    <p class="banner" id="banner"></p>
+    <div class="tabpanel active" data-panel="replay"><iframe id="out-replay" title="qain replay diff" sandbox="allow-scripts"></iframe></div>
+    <div class="tabpanel" data-panel="report"><iframe id="out-report" title="qain HTML report" sandbox="allow-scripts"></iframe></div>
+    <div class="tabpanel" data-panel="terminal"><pre class="terminal" id="out-terminal"></pre></div>
+  </section>
+</main>
+
+<footer>
+  Built on <a href="https://github.com/Shinyaigeek/qain">@qain/core</a>'s
+  <code>captureDom</code> — the same snapshot format the CLI produces over CDP,
+  captured here from a live DOM. · MIT © Shinyaigeek
+</footer>
+
+<script type="module" src="./playground.js"></script>
+</body>
+</html>

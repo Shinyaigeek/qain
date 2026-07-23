@@ -1,4 +1,5 @@
 export { capture, type CaptureOptions } from './capture.js'
+export { captureDom, type CaptureDomOptions } from './capture-dom.js'
 export type { CdpSession } from './cdp.js'
 export {
   composite,
