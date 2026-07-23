@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { type Server, createServer } from 'node:http'
+import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import {
@@ -69,10 +70,100 @@ shot options
 
 Exit code is 1 when the diff is non-empty, so CI and agents can gate on it.`
 
+const version = (() => {
+  try {
+    return (createRequire(import.meta.url)('../package.json') as { version: string }).version
+  } catch {
+    return ''
+  }
+})()
+
+// The logo, as terminal art. It *is* what qain does: a faint frame (the before),
+// a solid frame offset over it (the after), and the red square where they overlap
+// — the diff. Each character is two vertical pixels, drawn with half-blocks.
+// `i` outline · `b` after (blue) · `r` diff (red) · `.` transparent.
+const ICON = [
+  '..............',
+  '..iiiiiii.....',
+  '.i.......i....',
+  '.i.......i....',
+  '.i...rrrrbb...',
+  '.i..rrrrrrbb..',
+  '.i..rrrrrrbbb.',
+  '.i..rrrrrrbbb.',
+  '.i..rrrrrrbbb.',
+  '..iibrrrrbbbb.',
+  '....bbbbbbbbb.',
+  '.....bbbbbbb..',
+  '......bbbbb...',
+  '..............',
+]
+const PALETTE: Record<string, [number, number, number]> = {
+  i: [150, 160, 178], // outline — reads on light and dark terminals
+  b: [67, 97, 238], // after — blue
+  r: [229, 72, 77], // diff — red
+}
+const fg = (c: [number, number, number]) => `\x1b[38;2;${c[0]};${c[1]};${c[2]}m`
+const bg = (c: [number, number, number]) => `\x1b[48;2;${c[0]};${c[1]};${c[2]}m`
+const RESET = '\x1b[0m'
+
+/** Fold the pixel map into half-block rows: top pixel = foreground, bottom = background. */
+function iconLines(): string[] {
+  const lines: string[] = []
+  for (let r = 0; r < ICON.length; r += 2) {
+    let line = ''
+    for (let c = 0; c < ICON[r]!.length; c++) {
+      const top = PALETTE[ICON[r]![c]!]
+      const bot = PALETTE[ICON[r + 1]?.[c] ?? '.']
+      if (!top && !bot) line += ' '
+      else if (top && bot) line += `${fg(top)}${bg(bot)}▀${RESET}`
+      else if (top) line += `${fg(top)}▀${RESET}`
+      else line += `${fg(bot!)}▄${RESET}`
+    }
+    lines.push(line)
+  }
+  return lines
+}
+
+/**
+ * The welcome splash: the logo beside the wordmark. Shown only on an interactive
+ * TTY — piped or agent-driven runs get clean help with no escape codes.
+ */
+function banner(): string {
+  const B = '\x1b[1m'
+  const D = '\x1b[2m'
+  const dot = `${fg(PALETTE.r!)}·${RESET}`
+  const text = [
+    '',
+    `${B}${fg(PALETTE.b!)}qain${RESET}${version ? `  ${D}v${version}${RESET}` : ''}`,
+    `${D}semantic style-regression testing${RESET}`,
+    `${D}— what changed, and what merely moved${RESET}`,
+    '',
+    `${D}semantic vrt ${dot}${D} names the rule ${dot}${D} exit-code gating${RESET}`,
+    '',
+  ]
+  const icon = iconLines()
+  const rows = Math.max(icon.length, text.length)
+  const blankIcon = ' '.repeat(ICON[0]!.length)
+  let out = '\n'
+  for (let i = 0; i < rows; i++) {
+    const left = icon[i] ?? blankIcon
+    const right = text[i] ?? ''
+    out += `  ${left}   ${right}\n`
+  }
+  return out
+}
+
 async function main(argv: string[]): Promise<number> {
   const command = argv[0]
   if (!command || command === '--help' || command === '-h') {
-    process.stdout.write(`${USAGE}\n`)
+    if (process.stdout.isTTY) {
+      // The banner already carries the name and tagline; drop the usage heading.
+      process.stdout.write(banner())
+      process.stdout.write(`${USAGE.replace(/^qain — [^\n]*\n\n/, '')}\n`)
+    } else {
+      process.stdout.write(`${USAGE}\n`)
+    }
     return 0
   }
   if (command === 'snap') return snap(argv.slice(1))

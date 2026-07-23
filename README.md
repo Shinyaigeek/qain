@@ -1,6 +1,18 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/assets/logo-dark.svg">
+  <img src="./docs/assets/logo-light.svg" alt="qain logo" width="88" height="88">
+</picture>
+
 # qain
 
-Style-regression testing that reports **what changed and what merely moved**.
+**Style-regression testing that reports what changed and what merely moved.**
+
+</div>
+
+The logo *is* the tool: a faint frame (the **before**), a solid frame offset over
+it (the **after**), and the red square where they overlap — the **diff**.
 
 Pixel VRT tells you two images differ. It cannot tell you why, it cannot tell an
 LLM why, and it goes red when a font renders one pixel to the left. qain captures
