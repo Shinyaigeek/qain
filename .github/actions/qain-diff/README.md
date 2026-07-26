@@ -50,8 +50,10 @@ action exits in seconds when nothing matches.
   screenshots**, and the readable diff with the CSS rule behind each change.
   The diff image fades the unchanged pixels to grey and paints every pixel
   that differs in red.
-- New baselines and deleted baselines are listed as such; baseline files that
-  changed with no semantic difference (formatting churn) get a footnote.
+- New baselines get their own section with a **render of the snapshot**
+  embedded (there is no base to diff against); deleted baselines are listed
+  as such. Baseline files that changed with no semantic difference
+  (formatting churn) get a footnote.
 - An interactive HTML report per changed baseline, uploaded as the
   `qain-report-<name>` artifact and linked from the comment.
 - When a later push leaves no matching changes, the comment is deleted.

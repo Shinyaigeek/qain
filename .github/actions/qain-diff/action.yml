@@ -32,7 +32,8 @@ inputs:
     default: npx --yes @qain/cli
   screenshots:
     description: >-
-      Embed before/after/diff renders in the comment. Needs baselines captured
+      Embed before/after/diff renders in the comment (a single render for new
+      baselines). Needs baselines captured
       with `qain snap --replay`, a Chrome on the runner, and `contents: write`
       (the images are committed to the assets branch). Degrades gracefully when
       any of those are missing.

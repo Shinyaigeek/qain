@@ -53,6 +53,17 @@ export function buildComment({ name = 'qain', runUrl = '', hasReport = false, en
     if (e.status === 'added') {
       out.push(`#### \`${e.path}\` — new baseline`)
       out.push('First snapshot for this target; there is no base to diff against.')
+      if (e.images?.after) {
+        out.push('')
+        out.push('| render |')
+        out.push('| --- |')
+        out.push(`| ![render](${e.images.after}) |`)
+      } else if (e.noReplay) {
+        out.push('')
+        out.push(
+          '<sub>No render — capture the baseline with `qain snap --replay` to embed a screenshot.</sub>',
+        )
+      }
       continue
     }
     if (e.status === 'removed') {
@@ -137,7 +148,11 @@ if (process.argv.includes('--demo')) {
           contrast: 1,
           text: 'default state\n  html > body > p\n    color: rgb(90, 90, 90) → rgb(190, 190, 190)',
         },
-        { path: 'src/__qain__/pricing.qain.json', status: 'added' },
+        {
+          path: 'src/__qain__/pricing.qain.json',
+          status: 'added',
+          images: { after: 'https://example.com/render.png' },
+        },
         { path: 'src/__qain__/legacy.qain.json', status: 'removed' },
         { path: 'src/__qain__/quiet.qain.json', status: 'modified', total: 0 },
       ],

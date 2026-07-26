@@ -174,8 +174,31 @@ export async function run({ github, context, core }) {
     const mergeBase = cmp.merge_base_commit.sha
 
     for (const f of matched) {
+      const slug = f.filename.replace(/[^A-Za-z0-9._-]+/g, '__')
       if (f.status === 'added') {
-        entries.push({ path: f.filename, status: 'added' })
+        // No base to diff against, but the snapshot itself is renderable:
+        // shot it against itself and embed the (identical) after render.
+        const entry = { path: f.filename, status: 'added' }
+        if (screenshots) {
+          const after = join(workspace, f.filename)
+          if (hasReplayData(readFileSync(after, 'utf8'))) {
+            const shotDir = join(reportDir, `${slug}.shots`)
+            const chrome = findChrome()
+            const r = qain(cmdWords, [
+              'shot',
+              after,
+              after,
+              '-o',
+              shotDir,
+              ...(chrome ? ['--browser', chrome] : []),
+            ])
+            if (r.status === 0) entry.shotDir = shotDir
+            else core.warning(`qain shot failed for ${f.filename}: ${r.stderr || r.stdout}`)
+          } else {
+            entry.noReplay = true
+          }
+        }
+        entries.push(entry)
         continue
       }
       if (f.status === 'removed') {
@@ -183,7 +206,6 @@ export async function run({ github, context, core }) {
         continue
       }
       const basePath = f.previous_filename ?? f.filename
-      const slug = f.filename.replace(/[^A-Za-z0-9._-]+/g, '__')
       try {
         const { data: raw } = await github.rest.repos.getContent({
           owner,
@@ -254,7 +276,10 @@ export async function run({ github, context, core }) {
       const assets = []
       for (const e of withShots) {
         e.images = {}
-        for (const file of ['before.png', 'after.png', 'diff.png']) {
+        // A new baseline has no meaningful before/diff — embed just the render.
+        const wanted =
+          e.status === 'added' ? ['after.png'] : ['before.png', 'after.png', 'diff.png']
+        for (const file of wanted) {
           const path = `pr-${pr.number}/${e.path.replace(/[^A-Za-z0-9._-]+/g, '__')}/${file}`
           assets.push({ path, base64: readFileSync(join(e.shotDir, file)).toString('base64') })
           e.images[file.replace('.png', '')] = path
