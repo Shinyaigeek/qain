@@ -124,8 +124,11 @@ qain shot baseline.json after.json -o shots/            # before/after/diff.png
 An agent loop is then: snap → edit → snap → diff; repeat until the diff
 contains only the changes it intended. The
 [`examples/`](../examples/README.md) directory runs this exact workflow
-end-to-end, and this repo's own CI posts the diff and screenshots on PRs that
-change a committed baseline.
+end-to-end.
+
+On GitHub, the [qain-diff action](./github-action.md) packages this up: it
+posts the diff and the screenshots as a sticky PR comment whenever a
+committed baseline changes — this repo's own CI runs it.
 
 ## Capture on a phone-sized viewport
 

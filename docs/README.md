@@ -14,6 +14,9 @@ from [`examples/`](../examples).
 - **[Recipes](./recipes.md)** — snapshot a dev server, scope to one element,
   point at a Storybook story, extract computed styles as data, gate CI and
   coding agents on the exit code.
+- **[GitHub Action](./github-action.md)** — a sticky PR comment with the
+  semantic diff and before/after/diff screenshots whenever a committed
+  baseline changes.
 - **[Snapshot & diff format](./snapshot-format.md)** — what is inside the JSON
   the CLI reads and writes.
 - **[Using @qain/core as a library](./library.md)** — capture and diff from

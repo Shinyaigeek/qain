@@ -45,6 +45,14 @@ const DOCS = [
       'extract computed styles as data, and gate CI or a coding agent on the exit code.',
   },
   {
+    file: 'github-action.md',
+    page: `${SITE}/docs/github-action.html`,
+    label: 'GitHub Action',
+    desc:
+      'The qain-diff action: a sticky PR comment with the semantic diff and ' +
+      'before/after/diff screenshots whenever a committed baseline changes.',
+  },
+  {
     file: 'snapshot-format.md',
     page: `${SITE}/docs/snapshot-format.html`,
     label: 'Snapshot & diff format',

@@ -25,6 +25,7 @@ const NAV = [
   { src: 'getting-started.md', file: 'getting-started.html', label: 'Getting started' },
   { src: 'cli.md', file: 'cli.html', label: 'CLI reference' },
   { src: 'recipes.md', file: 'recipes.html', label: 'Recipes' },
+  { src: 'github-action.md', file: 'github-action.html', label: 'GitHub Action' },
   { src: 'snapshot-format.md', file: 'snapshot-format.html', label: 'Snapshot & diff format' },
   { src: 'library.md', file: 'library.html', label: 'Library API' },
 ]
