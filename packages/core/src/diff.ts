@@ -6,6 +6,7 @@ import {
   DEFAULT_IGNORED_ATTRIBUTES,
   DEFAULT_IGNORED_PROPERTIES,
   GEOMETRIC_PROPERTIES,
+  INHERITED_PROPERTIES,
 } from './projection.js'
 import {
   type Box,
@@ -228,6 +229,8 @@ function diffState(
     }
   }
 
+  demoteInherited(pending, afterByKey)
+
   const causes = classify(beforeByKey, after, selfChanged, sizeChanged)
 
   for (const [key, boxes] of boxChanged) {
@@ -244,6 +247,46 @@ function diffState(
   }
 
   ctx.out.push(...pending)
+}
+
+/**
+ * Demotes a style change that is only an ancestor's change, inherited.
+ *
+ * Walks up to the nearest ancestor whose own diff touched the same property. When
+ * that ancestor moved between the same two values, this node did not change of its
+ * own accord — it inherited. A node with its own declaration cannot match: either it
+ * overrides the ancestor and does not move at all, or it moves between values of its
+ * own. The chain collapses to whichever ancestor is the real cause, because each link
+ * stops at the first changed ancestor above it rather than at the root.
+ */
+function demoteInherited(pending: Change[], afterByKey: Map<string, QainNode>): void {
+  const changedAt = new Map<string, { before: string | undefined; after: string | undefined }>()
+  for (const change of pending) {
+    if (change.kind === 'style') {
+      changedAt.set(`${change.key}\u0000${change.property}`, {
+        before: change.before,
+        after: change.after,
+      })
+    }
+  }
+
+  for (const change of pending) {
+    if (change.kind !== 'style' || change.cause === 'derived') continue
+    if (!INHERITED_PROPERTIES.has(change.property)) continue
+
+    for (
+      let cursor = afterByKey.get(change.key)?.parent;
+      cursor !== undefined;
+      cursor = afterByKey.get(cursor)?.parent
+    ) {
+      const above = changedAt.get(`${cursor}\u0000${change.property}`)
+      if (!above) continue
+      if (above.before === change.before && above.after === change.after) {
+        change.cause = 'derived'
+      }
+      break
+    }
+  }
 }
 
 /**

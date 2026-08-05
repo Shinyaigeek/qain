@@ -135,6 +135,34 @@ export const CURRENT_COLOR_PROPERTIES: ReadonlySet<string> = new Set([
 ])
 
 /**
+ * Properties CSS inherits. When one changes on an ancestor, every descendant that
+ * did not override it reports the identical change — one edit to `body` restating
+ * itself once per node in the subtree. Same noise as `currentColor` above, arriving
+ * by a different route, so the diff demotes them on the same terms: only when the
+ * value matches an ancestor's change exactly, which an element with its own
+ * declaration cannot do.
+ *
+ * Only the inherited members of `DEFAULT_PROJECTION` are listed. `text-decoration-line`
+ * is not one of them — it propagates to in-flow descendants when it paints, but its
+ * computed value does not inherit, so a child reports `none` either way.
+ */
+export const INHERITED_PROPERTIES: ReadonlySet<string> = new Set([
+  'color',
+  'cursor',
+  'font-family',
+  'font-size',
+  'font-style',
+  'font-weight',
+  'letter-spacing',
+  'line-height',
+  'text-align',
+  'text-transform',
+  'visibility',
+  'white-space',
+  'word-break',
+])
+
+/**
  * Excluded from comparison, not from capture — you still see them in the
  * snapshot. `cursor` wobbles with pointer state; the box-derived properties are
  * here so that a custom projection that includes one of them by mistake still

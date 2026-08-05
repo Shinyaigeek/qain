@@ -65,6 +65,35 @@ test('separates the cause of a reflow from its collateral', async ({ page }) => 
   expect(result.summary.derived).toBe(derived.length)
 })
 
+test('reports an inherited change once, at the element that declared it', async ({ page }) => {
+  // `body` gains `letter-spacing: 1px`. Every descendant inherits it and restates
+  // the identical change — the noise this demotion exists to remove. `.note` sets
+  // 4px of its own, so it moves between different values and stays a cause.
+  const before = await snap(page, '/base.html')
+  const after = await snap(page, '/inherited-changed.html')
+  const result = diff(before, after)
+
+  const spacing = result.changes.filter(
+    (c) => c.kind === 'style' && c.property === 'letter-spacing',
+  )
+  const primary = spacing.filter((c) => c.kind === 'style' && c.cause === 'primary')
+  const derived = spacing.filter((c) => c.kind === 'style' && c.cause === 'derived')
+
+  // The body declared it; the note overrode it. Nothing else is a cause.
+  expect(primary.map((c) => c.key).sort()).toEqual(['@note', 'html/body'])
+  // The overlay, two levels down, restates the body's change verbatim. The buttons
+  // are absent rather than derived: the UA sheet resets `letter-spacing` on form
+  // controls, so they never inherited it in the first place.
+  expect(derived.length).toBeGreaterThan(0)
+  expect(derived.map((c) => c.key)).toContain('@overlay')
+
+  // Dropping the derived changes leaves the two declarations and no restatements.
+  const terse = diff(before, after, { omitDerived: true })
+  expect(
+    terse.changes.filter((c) => c.kind === 'style' && c.property === 'letter-spacing'),
+  ).toHaveLength(2)
+})
+
 test('detects a contrast regression and names the WCAG threshold', async ({ page }) => {
   const before = await snap(page, '/base.html')
   const after = await snap(page, '/contrast-regression.html')
