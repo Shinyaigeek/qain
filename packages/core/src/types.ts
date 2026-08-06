@@ -130,7 +130,11 @@ export type Change =
       property: string
       before: string | undefined
       after: string | undefined
-      /** 'derived' when the property merely tracks `color` — see CURRENT_COLOR_PROPERTIES. */
+      /**
+       * 'derived' when the change restates another one: the property tracks `color`
+       * (CURRENT_COLOR_PROPERTIES), or it was inherited unchanged from an ancestor
+       * that moved between the same two values (INHERITED_PROPERTIES).
+       */
       cause: Cause
     })
   | (ChangeBase & {

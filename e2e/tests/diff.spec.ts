@@ -65,6 +65,40 @@ test('separates the cause of a reflow from its collateral', async ({ page }) => 
   expect(result.summary.derived).toBe(derived.length)
 })
 
+test('reports an inherited change once, at the element that declared it', async ({ page }) => {
+  // `body` gains `letter-spacing: 1px`. Every descendant inherits it and restates the
+  // identical change — the noise this demotion exists to remove. `.own` moves 2px -> 4px
+  // of its own, so it stays a cause.
+  const before = await snap(page, '/inherited.html')
+  const after = await snap(page, '/inherited-changed.html')
+  const result = diff(before, after)
+
+  const spacing = result.changes.filter(
+    (c) => c.kind === 'style' && c.property === 'letter-spacing',
+  )
+  expect(
+    spacing
+      .filter((c) => c.kind === 'style' && c.cause === 'primary')
+      .map((c) => c.key)
+      .sort(),
+  ).toEqual(['@own', 'html/body'])
+  expect(
+    spacing.filter((c) => c.kind === 'style' && c.cause === 'derived').map((c) => c.key),
+  ).toContain('@plain')
+
+  // The stack shrink-wraps its children, so both paragraphs got wider. Only the one
+  // that changed its own letter-spacing is a reason for that: `@plain` grew because
+  // the body did. Without this, the deepest thing that resized reads as the cause of
+  // a change it merely received.
+  const boxes = result.changes.filter((c) => c.kind === 'box')
+  expect(boxes.find((c) => c.key === '@own')).toMatchObject({ cause: 'primary' })
+  expect(boxes.find((c) => c.key === '@plain')).toMatchObject({ cause: 'derived' })
+
+  // Dropping the derived changes leaves the two declarations and no restatements.
+  const terse = diff(before, after, { omitDerived: true })
+  expect(terse.changes.map((c) => c.key).sort()).toEqual(['@own', '@own', 'html/body'])
+})
+
 test('detects a contrast regression and names the WCAG threshold', async ({ page }) => {
   const before = await snap(page, '/base.html')
   const after = await snap(page, '/contrast-regression.html')

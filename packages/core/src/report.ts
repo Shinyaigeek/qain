@@ -1,4 +1,5 @@
 import { type Attribution, describeCause } from './explain.js'
+import { CURRENT_COLOR_PROPERTIES } from './projection.js'
 import { formatSource } from './rules.js'
 import { type Change, changeId, type Diff, isDerived } from './types.js'
 
@@ -107,7 +108,9 @@ function describe(change: Change, paint: Paint): string {
       return paint.red(`- removed  <${change.node.tag}>`)
     case 'style': {
       const body = `${change.property}: ${paint.red(change.before ?? '<unset>')} → ${paint.green(change.after ?? '<unset>')}`
-      return change.cause === 'derived' ? paint.dim(`${body}  (follows color)`) : body
+      if (change.cause !== 'derived') return body
+      const why = CURRENT_COLOR_PROPERTIES.has(change.property) ? 'follows color' : 'inherited'
+      return paint.dim(`${body}  (${why})`)
     }
     case 'attr':
       return `[${change.attribute}]: ${paint.red(change.before ?? '<unset>')} → ${paint.green(change.after ?? '<unset>')}`

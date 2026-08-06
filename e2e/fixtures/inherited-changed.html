@@ -1,0 +1,11 @@
+<!doctype html><meta charset=utf-8><title>qain fixture</title>
+<style>
+  body { margin: 0; font: 16px/1.5 system-ui, sans-serif; letter-spacing: 1px; }
+  /* Shrink-wraps every child, so a change to inherited text metrics resizes its boxes. */
+  .stack { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+  .own { letter-spacing: 4px; }
+</style>
+<div class="stack">
+  <p data-testid="plain">This line only inherits.</p>
+  <p class="own" data-testid="own">This line sets its own.</p>
+</div>

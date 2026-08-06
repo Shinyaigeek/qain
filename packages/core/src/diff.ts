@@ -6,6 +6,7 @@ import {
   DEFAULT_IGNORED_ATTRIBUTES,
   DEFAULT_IGNORED_PROPERTIES,
   GEOMETRIC_PROPERTIES,
+  INHERITED_PROPERTIES,
 } from './projection.js'
 import {
   type Box,
@@ -136,6 +137,8 @@ function diffState(
    * is a change, but it is not a reason for anything to move.
    */
   const selfChanged = new Set<string>()
+  /** Geometric style changes per node, pending the inheritance check below. */
+  const geometricStyle = new Map<string, string[]>()
   const boxChanged = new Map<string, { before: Box | null; after: Box | null }>()
   const pending: Change[] = []
 
@@ -169,7 +172,14 @@ function diffState(
         CURRENT_COLOR_PROPERTIES.has(property) && from === a.styles.color && to === b.styles.color
       const cause: Cause = tracksColor ? 'derived' : 'primary'
 
-      if (!tracksColor && GEOMETRIC_PROPERTIES.has(property)) selfChanged.add(key)
+      // Held back rather than added to `selfChanged` here: an inherited change resizes
+      // this node without it being the reason, and that is not known until every
+      // node's changes are in.
+      if (!tracksColor && GEOMETRIC_PROPERTIES.has(property)) {
+        const properties = geometricStyle.get(key)
+        if (properties) properties.push(property)
+        else geometricStyle.set(key, [property])
+      }
       pending.push({
         kind: 'style',
         state,
@@ -228,7 +238,23 @@ function diffState(
     }
   }
 
-  const causes = classify(beforeByKey, after, selfChanged, sizeChanged)
+  const inherited = inheritedRestatements(pending, afterByKey)
+  for (const change of pending) {
+    if (change.kind === 'style' && inherited.has(styleId(change.key, change.property))) {
+      change.cause = 'derived'
+    }
+  }
+
+  // A node is only a reason for its own box to move if something it did not inherit
+  // changed. `letter-spacing` arriving from an ancestor is not that.
+  const inheritedNodes = new Set<string>()
+  for (const [key, properties] of geometricStyle) {
+    const own = properties.filter((property) => !inherited.has(styleId(key, property)))
+    if (own.length > 0) selfChanged.add(key)
+    if (own.length < properties.length) inheritedNodes.add(key)
+  }
+
+  const causes = classify(beforeByKey, after, selfChanged, sizeChanged, inheritedNodes)
 
   for (const [key, boxes] of boxChanged) {
     pending.push({
@@ -246,6 +272,53 @@ function diffState(
   ctx.out.push(...pending)
 }
 
+/** Identifies one style change, so a demotion can be reported without carrying the change. */
+function styleId(key: string, property: string): string {
+  return `${key}\u0000${property}`
+}
+
+/**
+ * Finds the style changes that are only an ancestor's change, inherited.
+ *
+ * Walks up to the nearest ancestor whose own diff touched the same property. When
+ * that ancestor moved between the same two values, this node did not change of its
+ * own accord — it inherited. A node with its own declaration cannot match: either it
+ * overrides the ancestor and does not move at all, or it moves between values of its
+ * own. The chain collapses to whichever ancestor is the real cause, because each link
+ * stops at the first changed ancestor above it rather than at the root.
+ */
+function inheritedRestatements(pending: Change[], afterByKey: Map<string, QainNode>): Set<string> {
+  const changedAt = new Map<string, { before: string | undefined; after: string | undefined }>()
+  for (const change of pending) {
+    if (change.kind === 'style') {
+      changedAt.set(styleId(change.key, change.property), {
+        before: change.before,
+        after: change.after,
+      })
+    }
+  }
+
+  const inherited = new Set<string>()
+  for (const change of pending) {
+    if (change.kind !== 'style' || change.cause === 'derived') continue
+    if (!INHERITED_PROPERTIES.has(change.property)) continue
+
+    for (
+      let cursor = afterByKey.get(change.key)?.parent;
+      cursor !== undefined;
+      cursor = afterByKey.get(cursor)?.parent
+    ) {
+      const above = changedAt.get(styleId(cursor, change.property))
+      if (!above) continue
+      if (above.before === change.before && above.after === change.after) {
+        inherited.add(styleId(change.key, change.property))
+      }
+      break
+    }
+  }
+  return inherited
+}
+
 /**
  * Decides which nodes are causes.
  *
@@ -254,6 +327,11 @@ function diffState(
  * 20px`: padding is not in the projection, so the only evidence a button grew of
  * its own accord is that it grew while its children sat still. The same clause
  * exonerates the container above it, which grew only to fit the button.
+ *
+ * A node that only inherited a text-metric change is spared the second clause: its
+ * box grew because an ancestor's `letter-spacing` did, which is the ancestor's doing,
+ * not its own. Without that, a shrink-wrapped leaf is the deepest thing that resized
+ * and so reads as the cause of a change it merely received.
  *
  * The two rules are mutually recursive — whether a node is a cause depends on
  * whether its descendants are — so this walks the tree bottom-up. Document order
@@ -268,6 +346,7 @@ function classify(
   after: QainNode[],
   selfChanged: Set<string>,
   sizeChanged: Set<string>,
+  inheritedNodes: Set<string>,
 ): Set<string> {
   const hasCausalDescendant = new Set<string>()
   const afterKeys = new Set(after.map((n) => n.key))
@@ -285,7 +364,10 @@ function classify(
   for (let i = after.length - 1; i >= 0; i--) {
     const node = after[i]!
     const isCause =
-      selfChanged.has(node.key) || (sizeChanged.has(node.key) && !hasCausalDescendant.has(node.key))
+      selfChanged.has(node.key) ||
+      (sizeChanged.has(node.key) &&
+        !hasCausalDescendant.has(node.key) &&
+        !inheritedNodes.has(node.key))
     if (isCause) causes.add(node.key)
     if ((isCause || hasCausalDescendant.has(node.key)) && node.parent !== undefined) {
       hasCausalDescendant.add(node.parent)
