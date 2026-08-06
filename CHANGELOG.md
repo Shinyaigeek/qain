@@ -7,6 +7,35 @@ this monorepo are versioned together under
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-08-06
+
+### Added
+
+- **`captureDom(doc, options)` in `@qain/core`** captures a live DOM without
+  CDP, emitting the identical `Snapshot` the CDP capture does. Everything
+  downstream — diff, explain, replay, report — was already browser-safe, so qain
+  now runs entirely in a tab. There is an
+  [in-browser playground](https://shinyaigeek.github.io/qain/playground/) built
+  on it.
+- **The qain-diff action embeds a render for a brand-new baseline.** A PR that
+  adds a `*.qain.json` used to get only a text note; when the new snapshot
+  carries replay data it is now shot against itself and the render embedded, so
+  reviewers see what the first baseline looks like. Degrades to the usual
+  `--replay` hint otherwise.
+
+### Fixed
+
+- **An inherited change is no longer restated as a primary cause.** A change to
+  an inherited property on an ancestor is repeated by every descendant that did
+  not override it, so a single `body { line-height }` edit reported 123 primary
+  changes and `--omit-derived` had nothing to drop. Such a restatement is now
+  demoted to derived on the same terms `currentColor` already used — only when
+  the value matches an ancestor's change exactly, so an independently authored
+  change stays its own cause. The same edit now reports 1 primary and 122
+  derived. The demotion also runs before `selfChanged` is seeded, so a node that
+  merely inherited a geometric property is no longer reported as a cause of the
+  box move it received.
+
 ## [0.0.4] - 2026-07-16
 
 ### Added
@@ -74,7 +103,8 @@ Initial release. Packages: `@qain/cli` (the `qain` CLI), `@qain/core`, `@qain/pl
   matcher, and Storybook test-runner matcher.
 - GitHub Action for posting diff summaries as PR comments.
 
-[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/Shinyaigeek/qain/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/Shinyaigeek/qain/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/Shinyaigeek/qain/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/Shinyaigeek/qain/releases/tag/v0.0.2
