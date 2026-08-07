@@ -21,9 +21,12 @@ permissions:
   pages: write
   id-token: write
 
+# One deployment at a time; GitHub keeps only the newest queued run. In-flight
+# runs are left alone — cancelling one mid-deploy aborts the Pages deployment
+# and leaves the live site on whatever shipped last.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -75,7 +78,11 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # Generous, because most of this job is spent watching GitHub's own Pages
+    # queue. deploy-pages polls until the deployment leaves `deployment_queued`,
+    # and that queue has sat for well over five minutes; a tighter job timeout
+    # kills the action mid-poll and cancels the deployment it was waiting on.
+    timeout-minutes: 20
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
