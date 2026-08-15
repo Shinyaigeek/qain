@@ -7,6 +7,17 @@ this monorepo are versioned together under
 
 ## [Unreleased]
 
+### Added
+
+- **`ignorePaintOrder` for `diff()` (`--ignore-paint-order` on the CLI).** Paint
+  order is an index into the page's paint list, so it moves whenever the number of
+  painted elements before a node changes — which is the point when the page owns
+  everything it paints, and noise when it does not. A cross-origin `<iframe>` that
+  paints only once its document arrives shifts every node after it, so the same
+  page diffs against itself depending on the network. The flag mutes the
+  `paint-order` change kind and nothing else: the declaration that restacked an
+  element (`z-index`, `position`, …) is still reported as a style change.
+
 ## [0.0.5] - 2026-08-06
 
 ### Added

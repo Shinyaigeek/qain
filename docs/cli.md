@@ -70,6 +70,7 @@ qain diff before.json after.json --replay report.html
 | option | default | what |
 | --- | --- | --- |
 | `--omit-derived` | off | Drop changes that are only collateral movement — a node that moved because something above it grew. The terse view. |
+| `--ignore-paint-order` | off | Do not report paint-order (stacking) changes. Use it when part of the tree is out of the page's control — a cross-origin `<iframe>` that paints only once its document arrives shifts every node after it, so the same page diffs against itself depending on the network. |
 | `--json` | off | Emit the [diff as JSON](./snapshot-format.md#the-diff) instead of text. |
 | `--html <file>` | — | Also write a standalone HTML report. |
 | `--replay <file>` | — | Also write a before/after visual replay you can fade between. Requires both snapshots to carry `snap --replay` data; errors otherwise. |

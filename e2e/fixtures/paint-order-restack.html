@@ -1,0 +1,12 @@
+<!doctype html><meta charset=utf-8><title>qain fixture</title>
+<style>
+  body { margin: 0; font: 16px/1.5 system-ui, sans-serif; }
+  .deck { position: relative; width: 200px; height: 120px; }
+  .card { position: absolute; top: 0; left: 0; width: 120px; height: 80px; }
+  .back { background: rgb(200, 200, 200); z-index: 3; }
+  .front { background: rgb(90, 90, 200); z-index: 2; }
+</style>
+<div class="deck">
+  <div class="card back" data-testid="back"></div>
+  <div class="card front" data-testid="front"></div>
+</div>

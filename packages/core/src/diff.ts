@@ -30,6 +30,17 @@ export interface DiffOptions {
   contrastTolerance?: number
   /** Drop `derived` box changes entirely. The terse view. */
   omitDerived?: boolean
+  /**
+   * Do not report paint-order (stacking) changes.
+   *
+   * Paint order is an index into the page's paint list, so it moves whenever the
+   * number of painted elements before a node changes. That is exactly what you want
+   * when the page owns everything it paints. It is noise when part of the tree is
+   * out of the page's control — a cross-origin `<iframe>` that paints only once its
+   * document arrives shifts every node after it, and the same snapshot then differs
+   * from run to run depending on the network.
+   */
+  ignorePaintOrder?: boolean
 }
 
 export function diff(before: Snapshot, after: Snapshot, options: DiffOptions = {}): Diff {
@@ -37,6 +48,7 @@ export function diff(before: Snapshot, after: Snapshot, options: DiffOptions = {
   const ignoredAttributes = new Set(options.ignoreAttributes ?? DEFAULT_IGNORED_ATTRIBUTES)
   const tolerance = options.boxTolerance ?? DEFAULT_BOX_TOLERANCE
   const contrastTolerance = options.contrastTolerance ?? 0.05
+  const ignorePaintOrder = options.ignorePaintOrder ?? false
 
   const warnings: string[] = []
   if (before.qain !== after.qain) {
@@ -90,6 +102,7 @@ export function diff(before: Snapshot, after: Snapshot, options: DiffOptions = {
       ignoredAttributes,
       tolerance,
       contrastTolerance,
+      ignorePaintOrder,
       out: changes,
     })
   }
@@ -120,6 +133,7 @@ interface StateContext {
   ignoredAttributes: Set<string>
   tolerance: number
   contrastTolerance: number
+  ignorePaintOrder: boolean
   out: Change[]
 }
 
@@ -211,7 +225,7 @@ function diffState(
       boxChanged.set(key, { before: a.box, after: b.box })
     }
 
-    if (a.paintOrder !== b.paintOrder) {
+    if (!ctx.ignorePaintOrder && a.paintOrder !== b.paintOrder) {
       pending.push({
         kind: 'paint-order',
         state,
