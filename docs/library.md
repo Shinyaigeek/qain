@@ -81,6 +81,7 @@ attributions are computed automatically when both snapshots carry rules.
 | `contrastTolerance` | — | Contrast-ratio deltas below this are not reported. |
 | `ignoreProperties` | `DEFAULT_IGNORED_PROPERTIES` | Computed properties excluded from comparison. |
 | `ignoreAttributes` | `DEFAULT_IGNORED_ATTRIBUTES` (`['class']`) | Attributes excluded from comparison. Pass `[]` to compare `class` strings too. |
+| `ignorePaintOrder` | `false` | Do not report paint-order (stacking) changes. Use it when part of the tree is out of the page's control — a cross-origin `<iframe>` that paints only once its document arrives shifts every node after it, so the same page diffs against itself depending on the network. |
 
 ## Rendering results
 

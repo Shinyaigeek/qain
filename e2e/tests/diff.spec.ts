@@ -183,3 +183,31 @@ test('a recoloured element that gets pushed reports the move as derived', async 
   expect(box?.kind === 'box' && box.delta.dy).toBeGreaterThan(0)
   expect(box?.kind === 'box' && box.cause).toBe('derived')
 })
+
+test('ignorePaintOrder drops restacking, keeping the declaration that caused it', async ({
+  page,
+}) => {
+  // Two overlapping cards swap z-index: nothing moves, nothing is recoloured, only
+  // the paint order changes. That signal is exactly what you want when the page owns
+  // its whole tree — and pure noise when part of it is not (a cross-origin <iframe>
+  // that paints only once its document arrives shifts everything after it, so the
+  // same page then diffs against itself depending on the network).
+  const before = await snap(page, '/paint-order.html')
+  const after = await snap(page, '/paint-order-restack.html')
+
+  const reported = diff(before, after)
+  expect(
+    reported.changes
+      .filter((c) => c.kind === 'paint-order')
+      .map((c) => c.key)
+      .sort(),
+  ).toEqual(['@back', '@front'])
+  expect(reported.changes.filter((c) => c.kind === 'box')).toEqual([])
+
+  const ignored = diff(before, after, { ignorePaintOrder: true })
+  expect(ignored.changes.filter((c) => c.kind === 'paint-order')).toEqual([])
+
+  // The z-index declaration itself is still reported; only the stacking side effect is muted.
+  const styles = ignored.changes.filter((c) => c.kind === 'style')
+  expect(styles.map((c) => c.kind === 'style' && c.property)).toEqual(['z-index'])
+})

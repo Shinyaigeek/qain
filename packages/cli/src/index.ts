@@ -47,6 +47,9 @@ diff options
       --html <file>        write a standalone HTML report
       --json               emit the diff as JSON instead of text
       --omit-derived       drop changes that are only collateral movement
+      --ignore-paint-order do not report paint-order (stacking) changes; use when
+                           part of the tree is out of the page's control, such as a
+                           cross-origin iframe that paints only once it loads
       --replay <file>      write a before/after replay you can fade between
                            (capture both snapshots with \`snap --replay\` first)
       --serve              host the view on localhost instead of writing a file;
@@ -264,6 +267,7 @@ async function compare(argv: string[]): Promise<number> {
       port: { type: 'string' },
       json: { type: 'boolean', default: false },
       'omit-derived': { type: 'boolean', default: false },
+      'ignore-paint-order': { type: 'boolean', default: false },
       // node:util's parseArgs has no --no-<flag> support, so the negation is the flag.
       'no-color': { type: 'boolean', default: false },
       tolerance: { type: 'string' },
@@ -281,6 +285,7 @@ async function compare(argv: string[]): Promise<number> {
 
   const result = diff(before, after, {
     omitDerived: values['omit-derived'],
+    ignorePaintOrder: values['ignore-paint-order'],
     ...(values.tolerance ? { boxTolerance: Number(values.tolerance) } : {}),
   })
 
