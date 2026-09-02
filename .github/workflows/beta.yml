@@ -1,0 +1,109 @@
+name: Beta release
+
+# Publishes the workspace to npm under a dist-tag, from whatever branch you run it
+# on. Nothing has to be merged to main first — which is the point: a feature branch
+# can be installed and tried in a real project before the API is settled.
+#
+# The version is derived, never committed. `0.0.5` on the branch publishes as
+# `0.0.6-beta.<run>.g<sha>`: it sorts above the current release and below the next
+# one, and `--tag beta` means `latest` never moves. Nothing on `npm install qain`
+# changes for anyone who did not ask for the beta.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: npm dist-tag to publish under
+        type: string
+        default: beta
+      dry-run:
+        description: build, test and pack, but do not publish
+        type: boolean
+        default: false
+
+concurrency:
+  group: beta-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      # `latest` is the one tag that changes what a plain `npm install` resolves to.
+      # A beta run must never take it, whatever was typed into the input box.
+      - name: Reject a dist-tag that would move latest
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          case "$TAG" in
+            latest|"")
+              echo "::error::refusing to publish a beta under '$TAG'; use the Release workflow for latest"
+              exit 1
+              ;;
+          esac
+          if ! printf '%s' "$TAG" | grep -Eq '^[a-z][a-z0-9-]*$'; then
+            echo "::error::dist-tag '$TAG' is not a lowercase npm tag"
+            exit 1
+          fi
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Derive the prerelease version
+        id: version
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          id="${{ github.run_number }}.g$(git rev-parse --short=7 HEAD)"
+          version=$(node scripts/set-version.mjs --prerelease "$TAG" --id "$id")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm browsers --with-deps
+      - run: pnpm test
+
+      # A dry run still resolves `workspace:*` and builds the tarballs, so it fails
+      # on exactly the packaging mistakes a real publish would.
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if [ "${{ inputs.dry-run }}" = "true" ]; then
+            pnpm publish -r --tag "$TAG" --no-git-checks --dry-run
+          else
+            pnpm publish -r --tag "$TAG" --provenance --no-git-checks
+          fi
+
+      - name: Summary
+        env:
+          TAG: ${{ inputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          {
+            if [ "${{ inputs.dry-run }}" = "true" ]; then
+              echo "### Dry run — nothing was published"
+            else
+              echo "### Published \`$VERSION\` under \`$TAG\`"
+            fi
+            echo
+            echo "From \`${{ github.ref_name }}\` at \`$(git rev-parse --short=7 HEAD)\`."
+            echo
+            echo '```sh'
+            echo "pnpm add -D @qain/cli@$TAG"
+            echo '```'
+            echo
+            echo "\`latest\` is unchanged."
+          } >> "$GITHUB_STEP_SUMMARY"
