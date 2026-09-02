@@ -17,7 +17,17 @@ import {
   type Snapshot,
   type StateName,
 } from '@qain/core'
-import { chromium, type Page } from 'playwright-core'
+import {
+  ConfigError,
+  DEFAULT_CONFIG_FILE,
+  formatImpactMarkdown,
+  formatImpactText,
+  loadConfig,
+  renderShots,
+  runImpact,
+  updateBaselines,
+} from '@qain/impact'
+import { chromium } from 'playwright-core'
 
 const USAGE = `qain — semantic style-regression testing
 
@@ -25,6 +35,7 @@ const USAGE = `qain — semantic style-regression testing
   qain diff <before> <after> [opts] compare two snapshots
   qain view <snapshot> [opts]       rebuild the page from a snapshot, as HTML
   qain shot <before> <after> [opts] render before.png, after.png and diff.png
+  qain impact [options]             blast radius of the working tree, per component
 
 snap options
   -o, --out <file>         write JSON here (default: stdout)
@@ -64,6 +75,16 @@ view options
       --state <name>       which captured state to draw (default: default)
       --serve              host the rebuilt page on localhost instead of writing
       --port <n>           port for --serve (default: first free from 4179)
+
+impact options
+      --config <file>      target list and grouping rules (default: qain.impact.json)
+      --update             (re)write the baselines instead of diffing — run this on
+                           the base branch, never on the PR
+      --shots <dir>        render before/after/diff PNGs for every changed target
+      --markdown <file>    write the report as a PR comment
+      --json               emit the report as JSON
+      --omit-derived       hide components that only moved
+      --no-color           plain text
 
 shot options
   -o, --out-dir <dir>      where to write the three PNGs (default: .)
@@ -173,6 +194,7 @@ async function main(argv: string[]): Promise<number> {
   if (command === 'diff') return compare(argv.slice(1))
   if (command === 'view') return view(argv.slice(1))
   if (command === 'shot') return shot(argv.slice(1))
+  if (command === 'impact') return impact(argv.slice(1))
 
   process.stderr.write(`qain: unknown command '${command}'\n\n${USAGE}\n`)
   return 2
@@ -406,21 +428,12 @@ async function shot(argv: string[]): Promise<number> {
   try {
     await mkdir(dir, { recursive: true })
     const page = await browser.newPage({ viewport: before.viewport })
-
-    const render = async (snapshot: Snapshot): Promise<Buffer> => {
-      await page.setViewportSize(snapshot.viewport)
-      await page.setContent(renderReplay(snapshot, { state, bare: true }), { waitUntil: 'load' })
-      await page.evaluate(() => document.fonts.ready)
-      return page.screenshot({ fullPage: true })
-    }
-    const beforePng = await render(before)
-    const afterPng = await render(after)
-    const diffPng = await composeDiff(page, beforePng, afterPng)
+    const shots = await renderShots(page, before, after, state)
 
     for (const [file, png] of [
-      ['before.png', beforePng],
-      ['after.png', afterPng],
-      ['diff.png', diffPng],
+      ['before.png', shots.before],
+      ['after.png', shots.after],
+      ['diff.png', shots.diff],
     ] as const) {
       await writeFile(join(dir, file), png)
     }
@@ -431,72 +444,76 @@ async function shot(argv: string[]): Promise<number> {
   }
 }
 
+// ---------------------------------------------------------------------------
+
 /**
- * Paint the pixel overlay: the base render faded to near-white, with every
- * pixel that differs between the two screenshots in solid red. Composed in the
- * already-running browser so the CLI needs no image library.
+ * The blast radius of the working tree, grouped by the component a change landed
+ * in and by the stylesheet that caused it.
+ *
+ * Deliberately asymmetric: it captures HEAD only and diffs against baselines
+ * committed from the base branch. Capturing both sides per PR would mean checking
+ * out, installing and building the base ref inside the PR job, which is the
+ * slowest and most brittle shape this could take.
  */
-async function composeDiff(page: Page, beforePng: Buffer, afterPng: Buffer): Promise<Buffer> {
-  await page.setContent('<canvas id="diff"></canvas>', { waitUntil: 'load' })
-  await page.evaluate(
-    async ([a, b]) => {
-      const load = async (src: string) => {
-        const img = new Image()
-        img.src = src
-        await img.decode()
-        return img
-      }
-      const [ia, ib] = await Promise.all([load(a), load(b)])
-      const width = Math.max(ia.naturalWidth, ib.naturalWidth)
-      const height = Math.max(ia.naturalHeight, ib.naturalHeight)
-
-      const pixels = (img: HTMLImageElement) => {
-        const c = document.createElement('canvas')
-        c.width = width
-        c.height = height
-        const ctx = c.getContext('2d')!
-        ctx.drawImage(img, 0, 0)
-        return ctx.getImageData(0, 0, width, height).data
-      }
-      const da = pixels(ia)
-      const db = pixels(ib)
-
-      const canvas = document.getElementById('diff') as HTMLCanvasElement
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')!
-      const out = ctx.createImageData(width, height)
-      for (let i = 0; i < da.length; i += 4) {
-        const delta = Math.max(
-          Math.abs(da[i]! - db[i]!),
-          Math.abs(da[i + 1]! - db[i + 1]!),
-          Math.abs(da[i + 2]! - db[i + 2]!),
-          Math.abs(da[i + 3]! - db[i + 3]!),
-        )
-        if (delta > 8) {
-          out.data[i] = 255
-          out.data[i + 1] = 32
-          out.data[i + 2] = 32
-          out.data[i + 3] = 255
-        } else {
-          // Unchanged: the base render, faded, so the red reads in context.
-          const grey = 0.299 * da[i]! + 0.587 * da[i + 1]! + 0.114 * da[i + 2]!
-          const faded = 255 - (255 - grey) * 0.25
-          out.data[i] = faded
-          out.data[i + 1] = faded
-          out.data[i + 2] = faded
-          out.data[i + 3] = 255
-        }
-      }
-      ctx.putImageData(out, 0, 0)
+async function impact(argv: string[]): Promise<number> {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      config: { type: 'string', default: DEFAULT_CONFIG_FILE },
+      update: { type: 'boolean', default: false },
+      shots: { type: 'string' },
+      markdown: { type: 'string' },
+      json: { type: 'boolean', default: false },
+      'omit-derived': { type: 'boolean', default: false },
+      'no-color': { type: 'boolean', default: false },
     },
-    [toDataUrl(beforePng), toDataUrl(afterPng)] as const,
-  )
-  return page.locator('#diff').screenshot()
-}
+  })
 
-function toDataUrl(png: Buffer): string {
-  return `data:image/png;base64,${png.toString('base64')}`
+  const config = await loadConfig(values.config!).catch((error: unknown) => {
+    if (error instanceof ConfigError) {
+      process.stderr.write(`qain impact: ${error.message}\n`)
+      return null
+    }
+    throw error
+  })
+  if (!config) return 2
+  if (values['omit-derived']) config.omitDerived = true
+
+  const onProgress = (name: string, index: number, total: number) => {
+    process.stderr.write(`qain impact: [${index + 1}/${total}] ${name}\n`)
+  }
+
+  if (values.update) {
+    const written = await updateBaselines(config, { onProgress })
+    process.stderr.write(`qain impact: ${written.length} baseline(s) → ${config.baselineDir}\n`)
+    return 0
+  }
+
+  const report = await runImpact(config, {
+    ...(values.shots ? { shotsDir: values.shots } : {}),
+    onProgress,
+  })
+
+  if (values.markdown) {
+    await writeFile(values.markdown, formatImpactMarkdown(report))
+    process.stderr.write(`qain impact: markdown → ${values.markdown}\n`)
+  }
+  if (values.shots) {
+    process.stderr.write(`qain impact: screenshots → ${values.shots}\n`)
+  }
+
+  if (values.json) {
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
+  } else {
+    const color = !values['no-color'] && process.stdout.isTTY
+    process.stdout.write(`${formatImpactText(report, { color })}\n`)
+  }
+
+  // 2 is a broken run. 1 covers both "something changed" and "a target has no
+  // baseline" — an unbaselined target is unreviewed, not clean, and exiting 0 on
+  // one would be exactly the silent miss this command exists to prevent.
+  if (report.summary.errors > 0) return 2
+  return report.summary.changes > 0 || report.summary.missingBaselines > 0 ? 1 : 0
 }
 
 // ---------------------------------------------------------------------------

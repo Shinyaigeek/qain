@@ -128,3 +128,40 @@ qain shot before.json after.json -o shots/ --state hover
 | `--browser <path>` | Playwright's managed Chromium | Chromium/Chrome executable to launch. |
 
 Both snapshots must carry `snap --replay` data.
+
+## `qain impact`
+
+The blast radius of the working tree: which components changed, in which
+targets, and which stylesheet caused it. Captures every target in
+`qain.impact.json` at HEAD, diffs each against a baseline committed from the
+base branch, and folds the results into one report.
+
+```sh
+qain impact --update                 # on the base branch: write the baselines
+qain impact                          # on the PR: report the blast radius
+qain impact --shots shots/ --markdown impact.md
+```
+
+| option | default | what |
+| --- | --- | --- |
+| `--config <file>` | `qain.impact.json` | Target list, grouping attributes, origin patterns. |
+| `--update` | off | Rewrite the baselines instead of diffing. Run on the base branch, never on the PR. |
+| `--shots <dir>` | off | Render `before/after/diff.png` per changed target, from the snapshots alone. |
+| `--markdown <file>` | off | Write the report as a PR comment. |
+| `--json` | off | Emit the report as JSON. |
+| `--omit-derived` | off | Hide components that only moved. |
+| `--no-color` | off | Plain text. |
+
+Exit code is `0` when nothing changed, `1` when something changed **or a target
+has no baseline**, and `2` on a broken run. An unbaselined target is unreviewed
+rather than clean.
+
+Targets are captured with rules and replay data unconditionally — the first is
+what lets the report name the library behind a change, the second is what lets
+`--shots` render without re-running the app.
+
+Component names come from an attribute the design system stamps on its own root
+elements (`data-component` by default); each changed node is grouped under the
+nearest ancestor carrying one. See
+[`@qain/impact`](../packages/impact/README.md) for the full configuration, the
+CI shape, and what bundled CSS and runtime CSS-in-JS cost you.

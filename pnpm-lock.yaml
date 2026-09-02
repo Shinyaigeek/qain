@@ -44,6 +44,9 @@ importers:
       '@qain/core':
         specifier: workspace:*
         version: link:../packages/core
+      '@qain/impact':
+        specifier: workspace:*
+        version: link:../packages/impact
       '@qain/playwright':
         specifier: workspace:*
         version: link:../packages/playwright
@@ -74,11 +77,23 @@ importers:
       '@qain/core':
         specifier: workspace:*
         version: link:../core
+      '@qain/impact':
+        specifier: workspace:*
+        version: link:../impact
       playwright-core:
         specifier: 'catalog:'
         version: 1.62.0
 
   packages/core: {}
+
+  packages/impact:
+    dependencies:
+      '@qain/core':
+        specifier: workspace:*
+        version: link:../core
+      playwright-core:
+        specifier: 'catalog:'
+        version: 1.62.0
 
   packages/playwright:
     dependencies:

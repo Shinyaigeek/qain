@@ -7,6 +7,7 @@
     "@playwright/test": "catalog:",
     "@qain/cli": "workspace:*",
     "@qain/core": "workspace:*",
+    "@qain/impact": "workspace:*",
     "@qain/playwright": "workspace:*",
     "@qain/storybook": "workspace:*",
     "playwright-core": "catalog:"
