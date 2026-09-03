@@ -4,8 +4,8 @@ packages:
   - 'examples'
 
 catalog:
-  playwright-core: ^1.62.0
-  '@playwright/test': ^1.62.0
+  playwright-core: ^1.62.1
+  '@playwright/test': ^1.62.1
 
 # --- Supply-chain hardening -------------------------------------------------
 
