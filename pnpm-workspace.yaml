@@ -24,6 +24,13 @@ allowBuilds:
 # it without downgrades.
 minimumReleaseAge: 10080
 
+# Refuse a version whose publish trust is weaker than the versions before it.
+# A package that has been shipping with provenance / trusted publishing and
+# suddenly publishes a release from a bare token is the shape of a maintainer
+# account takeover; this fails the install instead of adopting it. Exceptions go
+# in `trustPolicyExclude` with a comment and a link.
+trustPolicy: no-downgrade
+
 # Verify installed dependencies match the lockfile before running any script,
 # and warn on drift instead of silently running against a stale node_modules.
 verifyDepsBeforeRun: warn
