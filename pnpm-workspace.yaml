@@ -31,6 +31,14 @@ minimumReleaseAge: 10080
 # in `trustPolicyExclude` with a comment and a link.
 trustPolicy: no-downgrade
 
+# A transitive dependency may only come from the registry (or a workspace /
+# file link). A git URL or a tarball URL deep in the tree is a package nobody
+# reviewed under a name the registry would have refused, and it sidesteps the
+# cooldown above. Direct dependencies in package.json may still use them — they
+# are visible in review. This is pnpm's default; it is pinned here so a future
+# default change cannot silently relax it.
+blockExoticSubdeps: true
+
 # Verify installed dependencies match the lockfile before running any script,
 # and warn on drift instead of silently running against a stale node_modules.
 verifyDepsBeforeRun: warn
