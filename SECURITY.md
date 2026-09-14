@@ -47,6 +47,9 @@ gaps in these are welcome:
 - **New dependency versions have a cooldown.** `minimumReleaseAge` delays
   adoption of freshly published versions, blunting the window in which a
   compromised release can spread.
+- **A trust downgrade fails the install.** `trustPolicy: no-downgrade` rejects
+  a version published with weaker evidence (no provenance, a bare token) than
+  the versions before it — the signature of a hijacked maintainer account.
 - **Lockfile is frozen in CI** (`--frozen-lockfile`) and dependency updates flow
   through Dependabot for review.
 - **Published packages carry npm provenance** and are published from a tagged
