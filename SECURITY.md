@@ -43,7 +43,9 @@ This project takes concrete steps to reduce dependency risk, and reports about
 gaps in these are welcome:
 
 - **Install scripts are blocked by default.** Only packages listed in
-  `allowBuilds` (`pnpm-workspace.yaml`) may run lifecycle scripts.
+  `allowBuilds` (`pnpm-workspace.yaml`) may run lifecycle scripts, and a new
+  dependency that brings an unlisted script fails the install
+  (`strictDepBuilds`) until it is reviewed.
 - **New dependency versions have a cooldown.** `minimumReleaseAge` delays
   adoption of freshly published versions, blunting the window in which a
   compromised release can spread.
