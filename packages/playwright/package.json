@@ -1,6 +1,6 @@
 {
   "name": "@qain/playwright",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Playwright fixture and expect matcher for qain style snapshots.",
   "type": "module",
   "main": "./dist/index.js",
