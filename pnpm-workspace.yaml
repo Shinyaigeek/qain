@@ -17,6 +17,12 @@ allowBuilds:
   playwright-core: true
   '@playwright/test': true
 
+# A dependency with an install script that is not listed above fails the
+# install outright (ERR_PNPM_IGNORED_BUILDS) rather than being skipped with a
+# warning that scrolls past. Every script either gets reviewed and allowed, or
+# explicitly denied with `<name>: false`. pnpm's default; pinned on purpose.
+strictDepBuilds: true
+
 # Do not adopt a version until it has been on the registry for this many
 # minutes (7 days). A malicious release is usually yanked well within a week, so
 # the cooldown keeps it out of the lockfile in the first place. The committed
