@@ -7,6 +7,8 @@ this monorepo are versioned together under
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-09-14
+
 ### Added
 
 - **`ignorePaintOrder` for `diff()` (`--ignore-paint-order` on the CLI).** Paint
@@ -17,6 +19,13 @@ this monorepo are versioned together under
   page diffs against itself depending on the network. The flag mutes the
   `paint-order` change kind and nothing else: the declaration that restacked an
   element (`z-index`, `position`, …) is still reported as a style change.
+
+### Changed
+
+- **`@qain/cli` now requires `playwright-core` ^1.62.1.** 1.62.1 fixes the
+  1.62.0 regressions in tsconfig resolution (`extends` bare specifiers and
+  directory-form project references were fatal) and restores image-type
+  actionable elements to the accessibility snapshot.
 
 ## [0.0.5] - 2026-08-06
 
@@ -114,7 +123,8 @@ Initial release. Packages: `@qain/cli` (the `qain` CLI), `@qain/core`, `@qain/pl
   matcher, and Storybook test-runner matcher.
 - GitHub Action for posting diff summaries as PR comments.
 
-[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/Shinyaigeek/qain/compare/v0.0.6...HEAD
+[0.0.6]: https://github.com/Shinyaigeek/qain/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/Shinyaigeek/qain/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/Shinyaigeek/qain/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/Shinyaigeek/qain/compare/v0.0.2...v0.0.3
