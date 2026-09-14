@@ -50,6 +50,9 @@ gaps in these are welcome:
 - **A trust downgrade fails the install.** `trustPolicy: no-downgrade` rejects
   a version published with weaker evidence (no provenance, a bare token) than
   the versions before it — the signature of a hijacked maintainer account.
+- **Transitive dependencies must come from the registry.** `blockExoticSubdeps`
+  rejects git and tarball URLs anywhere below the root `package.json`, so a
+  dependency cannot pull in code that never went through npm.
 - **Lockfile is frozen in CI** (`--frozen-lockfile`) and dependency updates flow
   through Dependabot for review.
 - **Published packages carry npm provenance** and are published from a tagged
