@@ -1,0 +1,17 @@
+/* Stands in for a design system shipped as a package. The impact tests point
+   `origins.library` at /vendor/ because a fixture under node_modules/ would be
+   swallowed by .gitignore. */
+.acme-Button {
+  padding: 8px 16px;
+  background: rgb(29, 78, 216);
+  border: 0;
+  border-radius: 6px;
+}
+.acme-Button__label {
+  color: rgb(255, 255, 255);
+  font-size: 14px;
+}
+.acme-Card {
+  padding: 12px;
+  border: 1px solid rgb(229, 231, 235);
+}

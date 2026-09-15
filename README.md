@@ -97,6 +97,7 @@ pnpm add -D @qain/cli         # CLI (installs the `qain` binary)
 pnpm add -D @qain/playwright  # Playwright matcher
 pnpm add -D @qain/vitest      # Vitest browser-mode matcher
 pnpm add -D @qain/storybook   # Storybook test-runner matcher
+pnpm add -D @qain/impact      # PR blast-radius reports
 pnpm add -D @qain/core        # library
 ```
 

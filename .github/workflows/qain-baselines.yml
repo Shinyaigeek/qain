@@ -30,7 +30,9 @@ jobs:
           cache: pnpm
       # Dogfood the CLI at HEAD instead of the published package.
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @qain/core --filter @qain/cli build
+      # `@qain/cli...` is the CLI *and its dependencies*, so this keeps working
+      # when the CLI picks up another workspace package.
+      - run: pnpm --filter "@qain/cli..." build
       - uses: ./.github/actions/qain-diff
         with:
           pattern: examples/baselines/*.qain.json

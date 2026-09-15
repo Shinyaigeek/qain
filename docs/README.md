@@ -10,10 +10,13 @@ from [`examples/`](../examples).
 - **[Getting started](./getting-started.md)** — install, capture your first
   snapshot, read your first diff.
 - **[CLI reference](./cli.md)** — every command and flag: `snap`, `diff`,
-  `view`, `shot`.
+  `view`, `shot`, `impact`.
 - **[Recipes](./recipes.md)** — snapshot a dev server, scope to one element,
   point at a Storybook story, extract computed styles as data, gate CI and
   coding agents on the exit code.
+- **[Impact reports](../packages/impact/README.md)** — feed it a PR and get
+  the blast radius: which components a library bump, theme edit or component
+  change actually moved, grouped by the stylesheet that caused it.
 - **[GitHub Action](./github-action.md)** — a sticky PR comment with the
   semantic diff and before/after/diff screenshots whenever a committed
   baseline changes.
